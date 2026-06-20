@@ -302,19 +302,19 @@ async function loadAll(){
   setSyncStatus('','Carregando...');
   try{
     // Load tabela
-    const tabData = await ghGet('tabela.json');
+    const tabData = await ghGet('tabela.json?v='+Date.now());
     const tabJson = JSON.parse(decodeURIComponent(escape(atob(tabData.content.replace(/\n/g,'')))));
     tabela      = tabJson.tabela || [];
     riscoTCOBs  = new Set((tabJson.risco_tcobrans||[]).map(Number));
     redutorK1   = tabJson.redutor_k1 ?? 0.8;
 
     // Load cedentes
-    const cedData = await ghGet('cedentes.json');
+    const cedData = await ghGet('cedentes.json?v='+Date.now());
     cedentesSHA   = cedData.sha;
     cedentesDB    = JSON.parse(decodeURIComponent(escape(atob(cedData.content.replace(/\n/g,'')))));
 
     // Load historico
-    const hData  = await ghGet('historico_borderos.json');
+    const hData  = await ghGet('historico_borderos.json?v='+Date.now());
     historicSHA  = hData.sha;
     historico    = JSON.parse(decodeURIComponent(escape(atob(hData.content.replace(/\n/g,'')))));
 
