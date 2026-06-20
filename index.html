@@ -431,24 +431,25 @@ function parseDate(s){
   if(!s) return null;
   try{
     // Already a Date object (XLSX cellDates:true on .xls serial dates)
-    if(s instanceof Date) return isNaN(s)?null:s;
+    if(s instanceof Date){
+      if(isNaN(s)) return null;
+      // Return UTC date string directly to avoid timezone shift
+      return s;
     const str=String(s).trim();
-    // dd/mm/yyyy
+    // dd/mm/yyyy → return as UTC date string
     const m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+    if(m){
+      // Use Date.UTC to avoid local timezone offset
+      return new Date(Date.UTC(+m[3],+m[2]-1,+m[1]));
     // yyyy-mm-dd
     const m2=str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if(m2) return new Date(+m2[1],+m2[2]-1,+m2[3]);
+    if(m2) return new Date(Date.UTC(+m2[1],+m2[2]-1,+m2[3]));
     // Excel serial number
     if(!isNaN(s)){
       const n=Number(s);
-      if(n>1000){ // likely serial date
-        const d=new Date((n-25569)*86400*1000);
-        return isNaN(d)?null:d;
-      }
-    }
-    const d=new Date(str);
-    return isNaN(d)?null:d;
+      if(n>1000) return new Date((n-25569)*86400*1000);
+    // ISO string with timezone — parse directly
+    return new Date(str);
   }catch(e){return null;}
 }
 function dateDiffDays(a,b){
@@ -487,19 +488,10 @@ function calcDesagio(quitados){
 
     // Lookup taxa from historico: key=CEDENTE|BORDERO, value=list of {tdesc,ag,data}
     const hKey = ced+'|'+bord;
-    // DEBUG: log problematic keys
-    const _dbgKeys=['VTN EMBALAGENS|1','ALFATEST|18','ALFATEST|19','ALFATEST|20'];
-    if(_dbgKeys.includes(hKey)){
-      const _e=historico[hKey]||[];
-      const _dr=row['DATAOPERACAO'];
-      console.log(`[DBG] ${hKey} raw=${JSON.stringify(_dr)} type=${typeof _dr} isDate=${_dr instanceof Date} parsed=${doperStr}`);
-      if(_e.length>1) console.log(`  entries:`,JSON.stringify(_e));
-    }
     let entries = historico[hKey];
     if(!entries){
       const cedOrig=String(row['CEDENTEORIG']||row['cedenteorig']||'').trim().toUpperCase();
       entries=historico[cedOrig+'|'+bord];
-    }
     if(!entries||!entries.length) continue;
     // Pick entry with closest date to doperStr
     let entry = entries[0];
@@ -508,9 +500,7 @@ function calcDesagio(quitados){
       for(const e of entries){
         const diff=Math.abs(new Date(e.data)-new Date(doperStr));
         if(diff<minDiff){minDiff=diff;entry=e;}
-      }
-    }
-
+  
     const taxa = entry.tdesc / 100;
 
     const valor     = sf(row['VALOR']||row['valor']);
@@ -552,7 +542,6 @@ function calcDesagio(quitados){
       comm = pct * rec;
     } else {
       comm = pct * rec * (1 - redutorK1);
-    }
 
     if(!byAg[ag]) byAg[ag]={comm:0,borderos:new Set()};
     byAg[ag].comm += comm;
@@ -561,7 +550,6 @@ function calcDesagio(quitados){
     // Detect new cedentes
     if(!(ced in cedentesDB)){
       novos.push({ced, ag, rec, comm: rec * lookupPct(taxa,'N') * (params.novos_pct||15)/100});
-    }
   }
 
   return {byAg, novos};
@@ -625,11 +613,8 @@ async function calcular(){
             if(!alreadyHas){
               if(!newBorderos[hkey]) newBorderos[hkey]=[...existing];
               newBorderos[hkey].push({tdesc,ag,data:dstr});
-            }
-          }
-        }catch(e){}
-      }
-
+                      }catch(e){}
+  
       // 3. Carteira per agent
       setStatus('running','Calculando carteira...');
       const carteiraAg={};
@@ -637,8 +622,7 @@ async function calcular(){
         const ag=normAg(row['agente']||row['AGENTE']);
         if(!ag||['JURIDICO','DIROPER','DIRETORIA','DIRCLI'].includes(ag)) continue;
         carteiraAg[ag]=(carteiraAg[ag]||0)+parseFloat(row['valor']||row['VALOR']||0);
-      }
-
+  
       // 4. Novos clientes commission
       const novosComByAg={};
       for(const n of novosParaRev){
@@ -646,8 +630,7 @@ async function calcular(){
         const minV=params.novos_min||500;
         const c=Math.max(n.rec*pct, minV);
         novosComByAg[n.ag]=(novosComByAg[n.ag]||0)+c;
-      }
-
+  
       // 5. Build results
       setStatus('running','Consolidando...');
       const results=[];
@@ -662,8 +645,7 @@ async function calcular(){
         const bateuMeta=ap.meta>0&&carteira>=ap.meta;
         results.push({nome:ag,tipo:ap.tipo,bateuMeta,carteira,desagio,tac,bonusMeta,novos:novosC,
           total,borderos:byAg[ag]?.borderos.size||0,meta:ap.meta,assist:ap.assist});
-      }
-
+  
       // 6. Retaguarda
       const totalBord=results.reduce((s,r)=>s+r.borderos,0);
       const bolo=totalBord*(params.ret_val||10);
@@ -677,8 +659,7 @@ async function calcular(){
       let newCount=0;
       for(const[k,entries] of Object.entries(newBorderos)){
         historico[k]=entries;newCount++;
-      }
-      if(newCount>0) await saveHistorico(newCount,mes);
+        if(newCount>0) await saveHistorico(newCount,mes);
 
       setStatus('done',`Calculado — ${results.length} gerentes · ${novosParaRev.length} novos cedentes`);
       renderResultado();
