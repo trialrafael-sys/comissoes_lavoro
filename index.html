@@ -448,6 +448,7 @@ function parseDate(s){
     if(!isNaN(s)){
       const n=Number(s);
       if(n>1000) return new Date((n-25569)*86400*1000);
+    }
     // ISO string with timezone — parse directly
     return new Date(str);
   }catch(e){return null;}
