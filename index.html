@@ -548,7 +548,7 @@ function calcDesagio(quitados){
 
     if(!byAg[ag]) byAg[ag]={comm:0,borderos:new Set()};
     byAg[ag].comm += comm;
-    byAg[ag].borderos.add(key);
+    byAg[ag].borderos.add(hKey);
 
     // Detect new cedentes
     if(!(ced in cedentesDB)){
