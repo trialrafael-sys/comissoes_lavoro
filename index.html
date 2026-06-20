@@ -487,6 +487,14 @@ function calcDesagio(quitados){
 
     // Lookup taxa from historico: key=CEDENTE|BORDERO, value=list of {tdesc,ag,data}
     const hKey = ced+'|'+bord;
+    // DEBUG: log problematic keys
+    const _dbgKeys=['VTN EMBALAGENS|1','ALFATEST|18','ALFATEST|19','ALFATEST|20'];
+    if(_dbgKeys.includes(hKey)){
+      const _e=historico[hKey]||[];
+      const _dr=row['DATAOPERACAO'];
+      console.log(`[DBG] ${hKey} raw=${JSON.stringify(_dr)} type=${typeof _dr} isDate=${_dr instanceof Date} parsed=${doperStr}`);
+      if(_e.length>1) console.log(`  entries:`,JSON.stringify(_e));
+    }
     let entries = historico[hKey];
     if(!entries){
       const cedOrig=String(row['CEDENTEORIG']||row['cedenteorig']||'').trim().toUpperCase();
