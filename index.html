@@ -566,7 +566,22 @@ async function calcular(){
       const mes=document.getElementById('refMonth').value||'—';
       document.getElementById('hdrMonth').textContent=mes;
 
-      // 1. Deságio from TitulosQuitados
+      // DEBUG: log first 3 LUCIMAR rows
+    const lucRows = rawData.quitados.filter(r=>String(r['AGENTE']||'').trim()==='LUCIMAR').slice(0,3);
+    console.log('LUCIMAR sample rows:');
+    lucRows.forEach((r,i)=>{
+      const doper=r['DATAOPERACAO'];
+      console.log(`Row ${i}: CED=${r['CEDENTE']} BORD=${r['BORDERO']} DOPER=${JSON.stringify(doper)} type=${typeof doper} isDate=${doper instanceof Date}`);
+      const d=parseDate(doper);
+      console.log(`  parseDate result: ${d} → iso: ${d?d.toISOString().slice(0,10):'NULL'}`);
+      const ced=String(r['CEDENTE']||'').trim().toUpperCase();
+      const bord=parseInt(r['BORDERO'])||0;
+      const dstr=d?d.toISOString().slice(0,10):'';
+      const key=ced+'|'+bord+'|'+dstr;
+      console.log(`  key: '${key}' → inHistorico: ${key in historico}`);
+    });
+
+    // 1. Deságio from TitulosQuitados
       const {byAg, novos} = calcDesagio(rawData.quitados);
       novosParaRev = dedupeNovos(novos);
 
