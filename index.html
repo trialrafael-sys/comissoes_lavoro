@@ -464,6 +464,18 @@ function calcDesagio(quitados){
   const byAg = {};
   const novos = []; // new cedentes not in DB
 
+  // DEBUG: show first 5 rows raw data
+  console.log('=== QUITADOS SAMPLE ===');
+  quitados.slice(0,5).forEach((r,i)=>{
+    const d=r['DATAOPERACAO'];
+    const b=r['BORDERO'];
+    const c=String(r['CEDENTE']||'').trim().toUpperCase();
+    const parsed=parseDate(d);
+    const dstr=parsed?parsed.toISOString().slice(0,10):'NULL';
+    const key=c+'|'+parseInt(b||0)+'|'+dstr;
+    console.log(`[${i}] CED=${c} BORD=${b} DOPER=${JSON.stringify(d)} type=${typeof d} isDate=${d instanceof Date} parsed=${dstr} key=${key} inHist=${key in historico}`);
+  });
+
   for(const row of quitados){
     const ag = normAg(row['AGENTE']||row['agente']);
     if(!ag||ag==='nan') continue;
