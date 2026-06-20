@@ -430,6 +430,8 @@ function calcBonusMeta(nome,carteira){
 function parseDate(s){
   if(!s) return null;
   try{
+    // Already a Date object (XLSX cellDates:true on .xls serial dates)
+    if(s instanceof Date) return isNaN(s)?null:s;
     const str=String(s).trim();
     // dd/mm/yyyy
     const m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -437,7 +439,15 @@ function parseDate(s){
     // yyyy-mm-dd
     const m2=str.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if(m2) return new Date(+m2[1],+m2[2]-1,+m2[3]);
-    const d=new Date(s);
+    // Excel serial number
+    if(!isNaN(s)){
+      const n=Number(s);
+      if(n>1000){ // likely serial date
+        const d=new Date((n-25569)*86400*1000);
+        return isNaN(d)?null:d;
+      }
+    }
+    const d=new Date(str);
     return isNaN(d)?null:d;
   }catch(e){return null;}
 }
