@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lavoro · Comissões</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0f0f11;
+    --surface: #18181c;
+    --surface2: #222228;
+    --border: #2e2e38;
+    --accent: #c8a96e;
+    --accent2: #7c6b4e;
+    --text: #e8e4dc;
+    --text2: #9a9490;
+    --text3: #5c5854;
+    --green: #4caf7d;
+    --red: #e05c5c;
+    --blue: #5b8ef0;
+    --radius: 8px;
+    --font-mono: 'SF Mono', 'Fira Code', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  header { border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .logo { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .logo span { color: var(--text3); font-weight: 400; }
+  .header-month { font-size: 12px; color: var(--text2); font-family: var(--font-mono); }
+
+  /* NAV TABS */
+  nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 32px; }
+  nav button { background: none; border: none; color: var(--text3); font-size: 13px; padding: 14px 18px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN */
+  main { max-width: 1280px; margin: 0 auto; padding: 32px; }
+
+  /* PANELS */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+  .panel-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 16px; font-weight: 600; }
+
+  /* UPLOAD ZONE */
+  .upload-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .upload-card { border: 1px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; }
+  .upload-card:hover { border-color: var(--accent2); background: rgba(200,169,110,0.04); }
+  .upload-card.loaded { border-color: var(--green); border-style: solid; }
+  .upload-card input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .upload-icon { font-size: 24px; margin-bottom: 8px; }
+  .upload-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .upload-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .upload-status { font-size: 11px; color: var(--green); margin-top: 6px; font-family: var(--font-mono); }
+
+  /* MONTH SELECTOR */
+  .month-row { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+  .month-row label { font-size: 12px; color: var(--text2); }
+  .month-row input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; font-family: var(--font-mono); }
+
+  /* BUTTON */
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #0f0f11; }
+  .btn-primary:hover { background: #d4b87a; }
+  .btn-primary:disabled { background: var(--text3); cursor: not-allowed; }
+  .btn-ghost { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+  .btn-ghost:hover { border-color: var(--accent2); color: var(--text); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* SUMMARY CARDS */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 6px; }
+  .kpi-value { font-size: 22px; font-weight: 600; color: var(--text); font-family: var(--font-mono); }
+  .kpi-value.accent { color: var(--accent); }
+  .kpi-value.green { color: var(--green); }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 600; }
+  td { padding: 11px 14px; border-bottom: 1px solid rgba(46,46,56,0.6); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
+  .name-cell { font-weight: 500; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .badge-sim { background: rgba(76,175,125,0.15); color: var(--green); }
+  .badge-nao { background: rgba(90,90,100,0.2); color: var(--text3); }
+  .badge-casa { background: rgba(200,169,110,0.12); color: var(--accent); }
+  .badge-orig { background: rgba(91,142,240,0.12); color: var(--blue); }
+  .total-row td { background: var(--surface2); font-weight: 600; border-top: 1px solid var(--border); }
+
+  /* BREAKDOWN MODAL */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 760px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 32px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .modal-name { font-size: 20px; font-weight: 600; }
+  .modal-sub { font-size: 12px; color: var(--text3); margin-top: 3px; font-family: var(--font-mono); }
+  .modal-close { background: none; border: none; color: var(--text3); font-size: 20px; cursor: pointer; padding: 4px; }
+  .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-label { font-size: 13px; color: var(--text2); }
+  .breakdown-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .breakdown-value { font-size: 15px; font-weight: 600; font-family: var(--font-mono); color: var(--text); }
+  .breakdown-value.positive { color: var(--green); }
+  .breakdown-value.accent { color: var(--accent); }
+  .section-divider { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin: 16px 0 8px; font-weight: 600; }
+  .total-line { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; margin-top: 8px; border-top: 2px solid var(--border); }
+  .total-line span:first-child { font-size: 13px; font-weight: 600; }
+  .total-line span:last-child { font-size: 22px; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+
+  /* PARAMS */
+  .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .param-group { margin-bottom: 16px; }
+  .param-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .param-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .param-row input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-family: var(--font-mono); width: 120px; }
+  .param-row label { font-size: 12px; color: var(--text2); min-width: 120px; }
+  .param-row input:focus { outline: none; border-color: var(--accent2); }
+  .tramo-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tramo-table th { font-size: 10px; color: var(--text3); padding: 6px 8px; text-align: left; }
+  .tramo-table td { padding: 5px 8px; }
+  .tramo-table input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 100%; }
+  .agent-params { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .agent-card-p { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .agent-card-p .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+  .field-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .field-row label { font-size: 11px; color: var(--text3); }
+  .field-row input, .field-row select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 110px; }
+  .field-row select option { background: var(--bg); }
+
+  /* STATUS BAR */
+  .status-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 10px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+  .status-dot.running { background: var(--accent); animation: pulse 1s infinite; }
+  .status-dot.done { background: var(--green); }
+  .status-dot.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* HISTORY */
+  .hist-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .hist-row:last-child { border-bottom: none; }
+  .hist-month { font-size: 14px; font-weight: 500; font-family: var(--font-mono); }
+  .hist-total { font-size: 14px; color: var(--accent); font-family: var(--font-mono); }
+  .hist-agents { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* CEDENTE LIST */
+  .cedente-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .cedente-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 12px; display: flex; justify-content: space-between; }
+  .cedente-item .val { color: var(--accent); font-family: var(--font-mono); }
+  .new-badge { font-size: 9px; background: rgba(76,175,125,0.2); color: var(--green); padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+
+  /* PRINT REPORT */
+  @media print {
+    header, nav, .no-print { display: none; }
+    body { background: white; color: black; }
+    .modal { position: static; width: 100%; }
+  }
+  .hidden { display: none !important; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* RETAGUARDA */
+  .retag-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .retag-total { font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
+  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; margin-top: 6px; }
+  .progress-fill { background: var(--accent); border-radius: 4px; height: 6px; transition: width 0.5s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Lavoro <span>· Comissões</span></div>
+  <div class="header-month" id="headerMonth">—</div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('upload')">Upload & Cálculo</button>
+  <button onclick="showTab('resultado')">Resultado</button>
+  <button onclick="showTab('retaguarda')">Retaguarda</button>
+  <button onclick="showTab('historico')">Histórico</button>
+  <button onclick="showTab('params')">Parâmetros</button>
+</nav>
+
+<main>
+
+<!-- ===== UPLOAD TAB ===== -->
+<div class="tab-content active" id="tab-upload">
+  <div class="panel">
+    <div class="panel-title">Período de referência</div>
+    <div class="month-row">
+      <label>Mês/Ano:</label>
+      <input type="month" id="refMonth" value="">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Arquivos do mês</div>
+    <div class="upload-grid">
+      <div class="upload-card" id="card-avaliacao">
+        <input type="file" accept=".xls,.xlsx" onchange="handleFile('avaliacao', this)">
+        <div class="upload-icon">📊</div>
+        <div class="upload-label">Avaliação de Resultados</div>
+        <div class="upload-sub">AvaliacaoResultadosCedente.xls</div>
+        <div class="upload-status" id="status-avaliacao"></div>
+      </div>
+      <div class="upload-card" id="card-quitados">
+        <input type="file" accept=".xls,.xlsx" onchange="handleFile('quitados', this)">
+        <div class="upload-icon">✅</div>
+        <div class="upload-label">Títulos Quitados</div>
+        <div class="upload-sub">TitulosQuitados.xls</div>
+        <div class="upload-status" id="status-quitados"></div>
+      </div>
+      <div class="upload-card" id="card-carteira">
+        <input type="file" accept=".xls,.xlsx" onchange="handleFile('carteira', this)">
+        <div class="upload-icon">📁</div>
+        <div class="upload-label">Carteira (fim do mês)</div>
+        <div class="upload-sub">CarteiraEmAberto.xlsx</div>
+        <div class="upload-status" id="status-carteira"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="statusPanel" style="display:none">
+    <div class="status-bar">
+      <div class="status-dot running" id="statusDot"></div>
+      <span id="statusMsg">Processando...</span>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="calcBtn" onclick="calcular()" disabled>
+    Calcular Comissões
+  </button>
+</div>
+
+<!-- ===== RESULTADO TAB ===== -->
+<div class="tab-content" id="tab-resultado">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="panel">
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Comissões — Gerentes</span>
+      <button class="btn btn-ghost btn-sm" onclick="exportarResultado()">↓ Exportar</button>
+    </div>
+    <div class="tbl-wrap">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>Gerente</th>
+            <th>Tipo</th>
+            <th>Bateu Meta</th>
+            <th class="num">Carteira R$</th>
+            <th class="num">Deságio</th>
+            <th class="num">Bônus Meta</th>
+            <th class="num">TAC / Tarifas</th>
+            <th class="num">Novos Clientes</th>
+            <th class="num">Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Clientes novos detectados este mês</div>
+    <div class="cedente-grid" id="novosGrid"></div>
+  </div>
+</div>
+
+<!-- ===== RETAGUARDA TAB ===== -->
+<div class="tab-content" id="tab-retaguarda">
+  <div class="kpi-row" id="kpiRetaguarda"></div>
+  <div class="panel">
+    <div class="panel-title">Distribuição do bolo — Retaguarda</div>
+    <div id="retaguardaContent"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Assistentes</div>
+    <div id="assistentesContent"></div>
+  </div>
+</div>
+
+<!-- ===== HISTÓRICO TAB ===== -->
+<div class="tab-content" id="tab-historico">
+  <div class="panel">
+    <div class="panel-title">Histórico de meses calculados</div>
+    <div id="historicoContent">
+      <p style="color:var(--text3);font-size:13px">Nenhum mês calculado ainda. Os dados ficam salvos localmente no browser.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PARAMS TAB ===== -->
+<div class="tab-content" id="tab-params">
+  <div class="params-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Configuração por gerente</div>
+        <div class="agent-params" id="agentParams"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Novos clientes</div>
+        <div class="param-row"><label>% sobre receita bruta</label><input type="number" id="p_novos_pct" value="15" step="0.5"> %</div>
+        <div class="param-row"><label>Mínimo por cliente</label>R$ <input type="number" id="p_novos_min" value="500"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Retaguarda</div>
+        <div class="param-row"><label>Meta de borderôs/mês</label><input type="number" id="p_retag_meta" value="310"></div>
+        <div class="param-row"><label>Valor por borderô</label>R$ <input type="number" id="p_retag_valor" value="10"></div>
+        <div class="param-row"><label>% Crédito</label><input type="number" id="p_retag_credito" value="31"> %</div>
+        <div class="param-row"><label>% Confirmação</label><input type="number" id="p_retag_conf" value="24"> %</div>
+        <div class="param-row"><label>% Tesouraria</label><input type="number" id="p_retag_tesour" value="10"> %</div>
+        <div class="param-row"><label>% Contabilidade</label><input type="number" id="p_retag_contab" value="10"> %</div>
+        <div class="param-row"><label>% Casa</label><input type="number" id="p_retag_casa" value="15"> %</div>
+        <div class="param-row"><label>% Contas a Pagar</label><input type="number" id="p_retag_cp" value="10"> %</div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Tabelas de bônus por carteira</div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Configure os tramos de bônus por carteira para cada gerente. Edite diretamente na tabela.</p>
+        <div id="tramoTables"></div>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="salvarParams()">Salvar Parâmetros</button>
+</div>
+
+</main>
+
+<!-- BREAKDOWN MODAL -->
+<div class="modal-bg hidden" id="modalBg" onclick="closeModal(event)">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// =============================================
+// STATE
+// =============================================
+let rawData = { avaliacao: null, quitados: null, carteira: null };
+let resultado = null;
+let params = null;
+let clienteDB = {}; // CNPJ -> first seen month
+
+const DEFAULT_AGENTS = [
+  { nome: 'LUCIMAR',    tipo: 'CASA', meta: 15000000, pct_tac: 0.15, pct_assist: 0.15, assist: 'LUCELIA' },
+  { nome: 'SOBRINHO',   tipo: 'CASA', meta: 11000000, pct_tac: 0.15, pct_assist: 0.00, assist: '' },
+  { nome: 'RHAVI',      tipo: 'CASA', meta: 4500000,  pct_tac: 0.15, pct_assist: 0.00, assist: 'LUCELIA' },
+  { nome: 'Christiano', tipo: 'CASA', meta: 20000000, pct_tac: 0.15, pct_assist: 0.00, assist: 'KAREN' },
+  { nome: 'Cabral',     tipo: 'CASA', meta: 10000000, pct_tac: 0.15, pct_assist: 0.00, assist: 'KAREN' },
+  { nome: 'LUCAS',      tipo: 'CASA', meta: 999999999,pct_tac: 0.15, pct_assist: 0.00, assist: '' },
+];
+
+const DEFAULT_TRAMOS = {
+  'LUCIMAR':    [{de:0,ate:13000000,bonus:0},{de:13000001,ate:15000000,bonus:7000},{de:15000001,ate:18000000,bonus:4000},{de:18000001,ate:20000000,bonus:5000},{de:20000001,ate:25000000,bonus:6000},{de:25000001,ate:30000000,bonus:8000},{de:30000001,ate:40000000,bonus:10000},{de:40000001,ate:999999999,bonus:12000}],
+  'SOBRINHO':   [{de:0,ate:8000000,bonus:0},{de:8000001,ate:11000000,bonus:3000},{de:11000001,ate:13000000,bonus:5000},{de:13000001,ate:15000000,bonus:7000},{de:15000001,ate:20000000,bonus:8000},{de:20000001,ate:25000000,bonus:10000},{de:25000001,ate:999999999,bonus:12000}],
+  'RHAVI':      [{de:0,ate:4500000,bonus:0},{de:4500001,ate:6500000,bonus:1000},{de:6500001,ate:9000000,bonus:2000},{de:9000001,ate:12000000,bonus:3000},{de:12000001,ate:15000000,bonus:4000},{de:15000001,ate:20000000,bonus:5000},{de:20000001,ate:999999999,bonus:7000}],
+  'Christiano': [{de:0,ate:5000000,bonus:0},{de:5000001,ate:10000000,bonus:4000},{de:10000001,ate:15000000,bonus:6000},{de:15000001,ate:20000000,bonus:9000},{de:20000001,ate:25000000,bonus:11000}],
+  'Cabral':     [{de:0,ate:10000000,bonus:0},{de:10000001,ate:999999999,bonus:0}],
+  'LUCAS':      [{de:0,ate:999999999,bonus:0}],
+};
+
+function loadParams() {
+  try {
+    const saved = localStorage.getItem('lavoro_params');
+    if (saved) { params = JSON.parse(saved); return; }
+  } catch(e) {}
+  params = {
+    agents: JSON.parse(JSON.stringify(DEFAULT_AGENTS)),
+    tramos: JSON.parse(JSON.stringify(DEFAULT_TRAMOS)),
+    novos_pct: 15,
+    novos_min: 500,
+    retag_meta: 310, retag_valor: 10,
+    retag_credito:31, retag_conf:24, retag_tesour:10, retag_contab:10, retag_casa:15, retag_cp:10
+  };
+}
+
+function loadClienteDB() {
+  try {
+    const saved = localStorage.getItem('lavoro_clientes');
+    if (saved) clienteDB = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveClienteDB() {
+  localStorage.setItem('lavoro_clientes', JSON.stringify(clienteDB));
+}
+
+function loadHistorico() {
+  try {
+    const saved = localStorage.getItem('lavoro_historico');
+    return saved ? JSON.parse(saved) : [];
+  } catch(e) { return []; }
+}
+
+function saveHistorico(mes, data) {
+  const hist = loadHistorico();
+  const idx = hist.findIndex(h => h.mes === mes);
+  if (idx >= 0) hist[idx] = { mes, data };
+  else hist.unshift({ mes, data });
+  localStorage.setItem('lavoro_historico', JSON.stringify(hist.slice(0, 24)));
+}
+
+// =============================================
+// TABS
+// =============================================
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'params') renderParams();
+  if (name === 'historico') renderHistorico();
+}
+
+// =============================================
+// FILE HANDLING
+// =============================================
+function handleFile(type, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rawData[type] = XLSX.utils.sheet_to_json(ws, { defval: null });
+      document.getElementById('card-' + type).classList.add('loaded');
+      document.getElementById('status-' + type).textContent = `✓ ${rawData[type].length} linhas`;
+      checkReady();
+    } catch(err) {
+      document.getElementById('status-' + type).textContent = '✗ Erro ao ler arquivo';
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function checkReady() {
+  const ready = rawData.avaliacao && rawData.carteira;
+  document.getElementById('calcBtn').disabled = !ready;
+}
+
+// =============================================
+// CALCULATION ENGINE
+// =============================================
+function normalizeAgente(a) {
+  if (!a) return '';
+  a = String(a).trim();
+  const map = { 'christiano': 'Christiano', 'cabral': 'Cabral', 'CABRAL': 'Cabral', 'CHRISTIANO': 'Christiano' };
+  return map[a] || a;
+}
+
+function getAgentParam(nome) {
+  return params.agents.find(a => a.nome === nome) || { tipo:'CASA', meta:0, pct_tac:0.15, pct_assist:0 };
+}
+
+function calcBonusMeta(nome, carteira) {
+  const tramos = params.tramos[nome] || [];
+  let bonus = 0;
+  for (const t of tramos) {
+    if (carteira >= t.de && carteira <= t.ate) { bonus = t.bonus; break; }
+  }
+  // 2% below rule: if within 2% of next tramo, pay that tramo
+  for (let i = 0; i < tramos.length - 1; i++) {
+    const next = tramos[i + 1];
+    const threshold = next.de * 0.98;
+    if (carteira >= threshold && carteira < next.de) { bonus = next.bonus; break; }
+  }
+  return bonus;
+}
+
+function calcular() {
+  setStatus('running', 'Lendo dados de avaliação...');
+  setTimeout(() => {
+    try {
+      const mes = document.getElementById('refMonth').value || 'Mês não definido';
+      document.getElementById('headerMonth').textContent = mes;
+
+      // --- 1. Parse AvaliacaoResultados ---
+      const av = rawData.avaliacao;
+      const byAgent = {};
+      for (const row of av) {
+        const ag = normalizeAgente(row['AGENTE'] || row['agente']);
+        if (!ag || ag === 'nan') continue;
+        if (!byAgent[ag]) byAgent[ag] = { borderos: 0, vtt: 0, df: 0, liquido: 0, adicional: 0, cedentes: new Set() };
+        byAgent[ag].borderos++;
+        byAgent[ag].vtt += parseFloat(row['VTT'] || 0);
+        byAgent[ag].df += parseFloat(row['DF'] || 0);
+        byAgent[ag].liquido += parseFloat(row['LIQUIDO'] || 0);
+        byAgent[ag].adicional += parseFloat(row['ADICIONAL'] || 0);
+        if (row['CEDENTE']) byAgent[ag].cedentes.add(String(row['CEDENTE']).trim().toUpperCase());
+      }
+
+      // --- 2. Parse Carteira (fim do mês = tamanho da carteira por agente) ---
+      setStatus('running', 'Calculando carteira por gerente...');
+      const cart = rawData.carteira;
+      const carteiraAg = {};
+      const cnpjsByAgent = {};
+      for (const row of cart) {
+        const ag = normalizeAgente(row['agente'] || row['AGENTE']);
+        if (!ag || ['JURIDICO','DIROPER','DIRETORIA','DIRCLI'].includes(ag)) continue;
+        const val = parseFloat(row['valor'] || row['VALOR'] || 0);
+        if (!carteiraAg[ag]) carteiraAg[ag] = 0;
+        carteiraAg[ag] += val;
+        const cnpj = String(row['CNPJ Sacado'] || row['CNPJ'] || '').replace(/\D/g,'');
+        if (cnpj) {
+          if (!cnpjsByAgent[ag]) cnpjsByAgent[ag] = new Set();
+          cnpjsByAgent[ag].add(cnpj);
+        }
+      }
+
+      // --- 3. Detect new clients ---
+      setStatus('running', 'Detectando clientes novos...');
+      const novosClientes = [];
+      const novosComissao = {};
+      
+      // For new client revenue, use av data grouped by cedente
+      const cederitesByAgent = {};
+      for (const row of av) {
+        const ag = normalizeAgente(row['AGENTE'] || row['agente']);
+        if (!ag || ag === 'nan') continue;
+        const ced = String(row['CEDENTE'] || '').trim().toUpperCase();
+        const key = ag + '|' + ced;
+        if (!cederitesByAgent[key]) cederitesByAgent[key] = 0;
+        cederitesByAgent[key] += parseFloat(row['DF'] || 0);
+      }
+
+      for (const [ag, cnpjs] of Object.entries(cnpjsByAgent)) {
+        novosComissao[ag] = 0;
+        for (const cnpj of cnpjs) {
+          if (!clienteDB[cnpj]) {
+            // New client!
+            clienteDB[cnpj] = mes;
+            // Find revenue for this client - approximate: use df proportional
+            // Better: use a percentage of the agent's total df for this new cedente
+            const pctNovos = (params.novos_pct || 15) / 100;
+            const minNovos = params.novos_min || 500;
+            // Estimate: new client bonus on first bordero revenue
+            // We'll use a per-new-client flat bonus for now since we can't link CNPJ to DF easily
+            novosClientes.push({ cnpj, agente: ag, mes });
+            // Commission: 15% of avg df per client for this agent
+            if (byAgent[ag]) {
+              const avgDf = byAgent[ag].df / (byAgent[ag].cedentes.size || 1);
+              const comm = Math.max(avgDf * pctNovos, minNovos);
+              novosComissao[ag] = (novosComissao[ag] || 0) + comm;
+            }
+          }
+        }
+      }
+
+      // --- 4. Build result per agent ---
+      setStatus('running', 'Calculando comissões...');
+      const agentList = params.agents.map(a => a.nome);
+      const results = [];
+
+      for (const ag of agentList) {
+        const ap = getAgentParam(ag);
+        const agData = byAgent[ag] || { borderos:0, vtt:0, df:0, liquido:0, adicional:0 };
+        const carteira = carteiraAg[ag] || 0;
+
+        let desagio = 0, bonusMeta = 0, tac = 0, novos = 0;
+
+        if (ap.tipo === 'CASA') {
+          desagio = agData.df;
+          // TAC: pct_tac % of ADICIONAL total
+          tac = agData.adicional * (ap.pct_tac || 0.15);
+          // Bonus meta
+          bonusMeta = calcBonusMeta(ag, carteira);
+          // Novos
+          novos = novosComissao[ag] || 0;
+        } else {
+          // ORIGINADOR: % of VTT (receita bruta)
+          desagio = agData.vtt * ((ap.pct_orig || 2) / 100);
+        }
+
+        const bateuMeta = carteira >= ap.meta;
+        const total = desagio + bonusMeta + tac + novos;
+
+        results.push({
+          nome: ag, tipo: ap.tipo, bateuMeta, carteira,
+          desagio, bonusMeta, tac, novos, total,
+          borderos: agData.borderos, vtt: agData.vtt,
+          meta: ap.meta, assist: ap.assist
+        });
+      }
+
+      // --- 5. Retaguarda ---
+      const totalBorderos = Object.values(byAgent).reduce((s,a) => s + a.borderos, 0);
+      const boloRetag = totalBorderos * (params.retag_valor || 10);
+      const retaguarda = calcRetaguarda(boloRetag);
+
+      // --- 6. Assistentes ---
+      const assistentes = calcAssistentes(results);
+
+      // Save
+      resultado = { mes, results, retaguarda, assistentes, novosClientes, totalBorderos, boloRetag };
+      saveClienteDB();
+      saveHistorico(mes, resultado);
+
+      setStatus('done', `Calculado com sucesso — ${results.length} gerentes, ${novosClientes.length} clientes novos`);
+      renderResultado();
+      renderRetaguarda();
+      // Switch to resultado tab
+      document.querySelectorAll('nav button')[1].click();
+
+    } catch(err) {
+      setStatus('error', 'Erro no cálculo: ' + err.message);
+      console.error(err);
+    }
+  }, 100);
+}
+
+function calcRetaguarda(bolo) {
+  const p = params;
+  const setores = [
+    { nome: 'Crédito',        pct: p.retag_credito || 31 },
+    { nome: 'Confirmação',    pct: p.retag_conf    || 24 },
+    { nome: 'Tesouraria',     pct: p.retag_tesour  || 10 },
+    { nome: 'Contabilidade',  pct: p.retag_contab  || 10 },
+    { nome: 'Casa',           pct: p.retag_casa    || 15 },
+    { nome: 'Contas a Pagar', pct: p.retag_cp      || 10 },
+  ];
+  return setores.map(s => ({ ...s, valor: bolo * s.pct / 100 }));
+}
+
+function calcAssistentes(results) {
+  const out = {};
+  for (const r of results) {
+    if (!r.assist) continue;
+    const ap = getAgentParam(r.nome);
+    const pct = ap.pct_assist || 0;
+    if (pct === 0) continue;
+    if (!out[r.assist]) out[r.assist] = 0;
+    out[r.assist] += r.total * pct;
+  }
+  return out;
+}
+
+function setStatus(state, msg) {
+  const panel = document.getElementById('statusPanel');
+  panel.style.display = 'block';
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot ' + state;
+  document.getElementById('statusMsg').textContent = msg;
+}
+
+// =============================================
+// RENDER RESULTADO
+// =============================================
+function fmt(n) {
+  return 'R$ ' + (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtN(n) {
+  return (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderResultado() {
+  if (!resultado) return;
+  const { results, novosClientes } = resultado;
+
+  // KPIs
+  const total = results.reduce((s,r) => s + r.total, 0);
+  const totalDesagio = results.reduce((s,r) => s + r.desagio, 0);
+  const metaBatidas = results.filter(r => r.bateuMeta).length;
+  const totalVTT = results.reduce((s,r) => s + r.vtt, 0);
+  const totalBorderos = results.reduce((s,r) => s + r.borderos, 0);
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Total Comissões</div><div class="kpi-value accent">${fmt(total)}</div></div>
+    <div class="kpi"><div class="kpi-label">Total Deságio</div><div class="kpi-value">${fmt(totalDesagio)}</div></div>
+    <div class="kpi"><div class="kpi-label">Gerentes Atingiram Meta</div><div class="kpi-value green">${metaBatidas} / ${results.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Volume Total (VTT)</div><div class="kpi-value">${fmt(totalVTT)}</div></div>
+    <div class="kpi"><div class="kpi-label">Clientes Novos</div><div class="kpi-value">${novosClientes.length}</div></div>
+  `;
+
+  // Table
+  const tbody = document.getElementById('resultBody');
+  tbody.innerHTML = '';
+  let totD=0, totB=0, totT=0, totN=0, totTotal=0;
+  for (const r of results) {
+    if (r.total === 0 && r.carteira === 0) continue;
+    totD+=r.desagio; totB+=r.bonusMeta; totT+=r.tac; totN+=r.novos; totTotal+=r.total;
+    const metaPct = r.meta > 0 ? Math.min(100, (r.carteira/r.meta*100)) : 0;
+    tbody.innerHTML += `
+      <tr>
+        <td class="name-cell">${r.nome}</td>
+        <td><span class="badge badge-${r.tipo.toLowerCase()}">${r.tipo}</span></td>
+        <td><span class="badge ${r.bateuMeta ? 'badge-sim' : 'badge-nao'}">${r.bateuMeta ? 'SIM' : 'NÃO'}</span></td>
+        <td class="num">
+          ${fmt(r.carteira)}
+          <div class="progress-bar" style="margin-top:4px;min-width:80px"><div class="progress-fill" style="width:${metaPct}%"></div></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${metaPct.toFixed(0)}% da meta</div>
+        </td>
+        <td class="num">${fmt(r.desagio)}</td>
+        <td class="num">${r.bonusMeta > 0 ? fmt(r.bonusMeta) : '<span style="color:var(--text3)">—</span>'}</td>
+        <td class="num">${fmt(r.tac)}</td>
+        <td class="num">${r.novos > 0 ? fmt(r.novos) : '<span style="color:var(--text3)">—</span>'}</td>
+        <td class="num" style="font-weight:600;color:var(--accent)">${fmt(r.total)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="showBreakdown('${r.nome}')">Detalhes</button></td>
+      </tr>
+    `;
+  }
+  tbody.innerHTML += `
+    <tr class="total-row">
+      <td colspan="4">Total</td>
+      <td class="num">${fmt(totD)}</td>
+      <td class="num">${fmt(totB)}</td>
+      <td class="num">${fmt(totT)}</td>
+      <td class="num">${fmt(totN)}</td>
+      <td class="num" style="color:var(--accent)">${fmt(totTotal)}</td>
+      <td></td>
+    </tr>
+  `;
+
+  // Novos clientes
+  const novosGrid = document.getElementById('novosGrid');
+  if (novosClientes.length === 0) {
+    novosGrid.innerHTML = '<p style="color:var(--text3);font-size:13px">Nenhum cliente novo detectado.</p>';
+  } else {
+    novosGrid.innerHTML = novosClientes.map(c => `
+      <div class="cedente-item">
+        <span style="font-size:11px;color:var(--text2)">${c.agente} <span class="new-badge">NOVO</span></span>
+        <span class="val" style="font-size:10px;font-family:var(--font-mono)">${c.cnpj}</span>
+      </div>
+    `).join('');
+  }
+}
+
+// =============================================
+// BREAKDOWN MODAL
+// =============================================
+function showBreakdown(nome) {
+  const r = resultado.results.find(x => x.nome === nome);
+  if (!r) return;
+  const metaPct = r.meta > 0 ? (r.carteira / r.meta * 100).toFixed(1) : '—';
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-name">${r.nome}</div>
+        <div class="modal-sub">${r.tipo} · ${resultado.mes} · ${r.borderos} borderôs</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="section-divider">Volume Operado</div>
+    <div class="breakdown-row">
+      <div><div class="breakdown-label">Volume total (VTT)</div></div>
+      <div class="breakdown-value">${fmt(r.vtt)}</div>
+    </div>
+    <div class="breakdown-row">
+      <div><div class="breakdown-label">Carteira fim do mês</div><div class="breakdown-sub">Meta: ${fmt(r.meta)} · ${metaPct}% atingido</div></div>
+      <div class="breakdown-value">${fmt(r.carteira)}</div>
+    </div>
+
+    <div class="section-divider">Componentes da Comissão</div>
+    <div class="breakdown-row">
+      <div>
+        <div class="breakdown-label">Deságio (DF)</div>
+        <div class="breakdown-sub">Receita bruta das operações liquidadas</div>
+      </div>
+      <div class="breakdown-value positive">${fmt(r.desagio)}</div>
+    </div>
+    <div class="breakdown-row">
+      <div>
+        <div class="breakdown-label">TAC / Tarifas</div>
+        <div class="breakdown-sub">% sobre adicional dos borderôs</div>
+      </div>
+      <div class="breakdown-value positive">${fmt(r.tac)}</div>
+    </div>
+    <div class="breakdown-row">
+      <div>
+        <div class="breakdown-label">Bônus por meta de carteira</div>
+        <div class="breakdown-sub">${r.bateuMeta ? '✓ Meta atingida — tramo aplicado' : 'Meta não atingida'}</div>
+      </div>
+      <div class="breakdown-value ${r.bonusMeta > 0 ? 'positive' : ''}">${r.bonusMeta > 0 ? fmt(r.bonusMeta) : '—'}</div>
+    </div>
+    <div class="breakdown-row">
+      <div>
+        <div class="breakdown-label">Bônus clientes novos</div>
+        <div class="breakdown-sub">${params.novos_pct}% sobre receita bruta do 1º borderô</div>
+      </div>
+      <div class="breakdown-value ${r.novos > 0 ? 'positive' : ''}">${r.novos > 0 ? fmt(r.novos) : '—'}</div>
+    </div>
+
+    <div class="total-line">
+      <span>Total a receber</span>
+      <span>${fmt(r.total)}</span>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm no-print" onclick="imprimirBreakdown('${nome}')">🖨 Imprimir relatório</button>
+      <button class="btn btn-ghost btn-sm no-print" onclick="closeModal()">Fechar</button>
+    </div>
+  `;
+  document.getElementById('modalBg').classList.remove('hidden');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalBg')) {
+    document.getElementById('modalBg').classList.add('hidden');
+  }
+}
+
+function imprimirBreakdown(nome) {
+  window.print();
+}
+
+// =============================================
+// RETAGUARDA
+// =============================================
+function renderRetaguarda() {
+  if (!resultado) return;
+  const { retaguarda, assistentes, totalBorderos, boloRetag } = resultado;
+
+  document.getElementById('kpiRetaguarda').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Total Borderôs</div><div class="kpi-value">${totalBorderos}</div></div>
+    <div class="kpi"><div class="kpi-label">Bolo Retaguarda</div><div class="kpi-value accent">${fmt(boloRetag)}</div></div>
+  `;
+
+  const retContent = document.getElementById('retaguardaContent');
+  retContent.innerHTML = retaguarda.map(s => `
+    <div class="retag-row">
+      <div>
+        <div style="font-weight:500">${s.nome}</div>
+        <div style="font-size:11px;color:var(--text3)">${s.pct}% do bolo</div>
+      </div>
+      <div class="retag-total">${fmt(s.valor)}</div>
+    </div>
+  `).join('');
+
+  const assistContent = document.getElementById('assistentesContent');
+  const ents = Object.entries(assistentes);
+  if (ents.length === 0) {
+    assistContent.innerHTML = '<p style="color:var(--text3);font-size:13px">Nenhum assistente configurado.</p>';
+  } else {
+    assistContent.innerHTML = ents.map(([nome, val]) => `
+      <div class="retag-row">
+        <div style="font-weight:500">${nome}</div>
+        <div class="retag-total">${fmt(val)}</div>
+      </div>
+    `).join('');
+  }
+}
+
+// =============================================
+// HISTORICO
+// =============================================
+function renderHistorico() {
+  const hist = loadHistorico();
+  const el = document.getElementById('historicoContent');
+  if (hist.length === 0) {
+    el.innerHTML = '<p style="color:var(--text3);font-size:13px">Nenhum mês calculado ainda.</p>';
+    return;
+  }
+  el.innerHTML = hist.map(h => {
+    const total = h.data.results ? h.data.results.reduce((s,r) => s+r.total, 0) : 0;
+    const agents = h.data.results ? h.data.results.filter(r=>r.total>0).map(r=>r.nome).join(', ') : '';
+    return `
+      <div class="hist-row">
+        <div>
+          <div class="hist-month">${h.mes}</div>
+          <div class="hist-agents">${agents}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="hist-total">${fmt(total)}</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadHistoricoMes('${h.mes}')">Ver</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function loadHistoricoMes(mes) {
+  const hist = loadHistorico();
+  const h = hist.find(x => x.mes === mes);
+  if (!h) return;
+  resultado = h.data;
+  document.getElementById('headerMonth').textContent = mes;
+  renderResultado();
+  renderRetaguarda();
+  document.querySelectorAll('nav button')[1].click();
+}
+
+// =============================================
+// PARAMS
+// =============================================
+function renderParams() {
+  // Agent params
+  const el = document.getElementById('agentParams');
+  el.innerHTML = params.agents.map((a,i) => `
+    <div class="agent-card-p">
+      <div class="agent-name">${a.nome}</div>
+      <div class="field-row">
+        <label>Tipo</label>
+        <select onchange="params.agents[${i}].tipo=this.value">
+          <option ${a.tipo==='CASA'?'selected':''}>CASA</option>
+          <option ${a.tipo==='ORIGINADOR'?'selected':''}>ORIGINADOR</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <label>Meta carteira</label>
+        <input type="number" value="${a.meta}" onchange="params.agents[${i}].meta=+this.value" style="width:120px">
+      </div>
+      <div class="field-row">
+        <label>% TAC</label>
+        <input type="number" value="${(a.pct_tac||0)*100}" step="0.5" onchange="params.agents[${i}].pct_tac=+this.value/100" style="width:60px"> %
+      </div>
+      <div class="field-row">
+        <label>% Assistente</label>
+        <input type="number" value="${(a.pct_assist||0)*100}" step="0.5" onchange="params.agents[${i}].pct_assist=+this.value/100" style="width:60px"> %
+      </div>
+    </div>
+  `).join('');
+
+  // Tramo tables
+  const tEl = document.getElementById('tramoTables');
+  tEl.innerHTML = Object.entries(params.tramos).map(([ag, tramos]) => `
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">${ag}</div>
+      <table class="tramo-table">
+        <thead><tr><th>De (R$)</th><th>Até (R$)</th><th>Bônus (R$)</th></tr></thead>
+        <tbody>
+          ${tramos.map((t,j) => `
+            <tr>
+              <td><input type="number" value="${t.de}" onchange="params.tramos['${ag}'][${j}].de=+this.value"></td>
+              <td><input type="number" value="${t.ate}" onchange="params.tramos['${ag}'][${j}].ate=+this.value"></td>
+              <td><input type="number" value="${t.bonus}" onchange="params.tramos['${ag}'][${j}].bonus=+this.value"></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `).join('');
+
+  // Other params
+  document.getElementById('p_novos_pct').value = params.novos_pct || 15;
+  document.getElementById('p_novos_min').value = params.novos_min || 500;
+  document.getElementById('p_retag_meta').value = params.retag_meta || 310;
+  document.getElementById('p_retag_valor').value = params.retag_valor || 10;
+  document.getElementById('p_retag_credito').value = params.retag_credito || 31;
+  document.getElementById('p_retag_conf').value = params.retag_conf || 24;
+  document.getElementById('p_retag_tesour').value = params.retag_tesour || 10;
+  document.getElementById('p_retag_contab').value = params.retag_contab || 10;
+  document.getElementById('p_retag_casa').value = params.retag_casa || 15;
+  document.getElementById('p_retag_cp').value = params.retag_cp || 10;
+}
+
+function salvarParams() {
+  params.novos_pct = parseFloat(document.getElementById('p_novos_pct').value);
+  params.novos_min = parseFloat(document.getElementById('p_novos_min').value);
+  params.retag_meta = parseFloat(document.getElementById('p_retag_meta').value);
+  params.retag_valor = parseFloat(document.getElementById('p_retag_valor').value);
+  params.retag_credito = parseFloat(document.getElementById('p_retag_credito').value);
+  params.retag_conf = parseFloat(document.getElementById('p_retag_conf').value);
+  params.retag_tesour = parseFloat(document.getElementById('p_retag_tesour').value);
+  params.retag_contab = parseFloat(document.getElementById('p_retag_contab').value);
+  params.retag_casa = parseFloat(document.getElementById('p_retag_casa').value);
+  params.retag_cp = parseFloat(document.getElementById('p_retag_cp').value);
+  localStorage.setItem('lavoro_params', JSON.stringify(params));
+  alert('Parâmetros salvos!');
+}
+
+// =============================================
+// EXPORT
+// =============================================
+function exportarResultado() {
+  if (!resultado) return;
+  const rows = resultado.results.map(r => ({
+    'Gerente': r.nome, 'Tipo': r.tipo, 'Bateu Meta': r.bateuMeta ? 'SIM' : 'NÃO',
+    'Carteira R$': r.carteira, 'Deságio R$': r.desagio,
+    'Bônus Meta R$': r.bonusMeta, 'TAC R$': r.tac, 'Novos Clientes R$': r.novos,
+    'Total R$': r.total
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Comissões');
+  XLSX.writeFile(wb, `Comissoes_${resultado.mes}.xlsx`);
+}
+
+// =============================================
+// INIT
+// =============================================
+loadParams();
+loadClienteDB();
+// Set current month
+const now = new Date();
+document.getElementById('refMonth').value = now.toISOString().slice(0,7);
+renderHistorico();
+</script>
+</body>
+</html>
