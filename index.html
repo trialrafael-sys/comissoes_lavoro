@@ -6,412 +6,353 @@
 <title>Lavoro · Comissões</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --bg: #0f0f11; --surface: #18181c; --surface2: #222228; --border: #2e2e38;
-    --accent: #c8a96e; --accent2: #7c6b4e; --text: #e8e4dc; --text2: #9a9490;
-    --text3: #5c5854; --green: #4caf7d; --red: #e05c5c; --blue: #5b8ef0;
-    --radius: 8px; --font-mono: 'SF Mono','Fira Code',monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter',system-ui,sans-serif; min-height: 100vh; }
-  header { border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
-  .logo { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
-  .logo span { color: var(--text3); font-weight: 400; }
-  .header-right { display: flex; align-items: center; gap: 16px; }
-  .sync-status { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
-  .sync-status.ok { color: var(--green); }
-  .sync-status.err { color: var(--red); }
-  nav { display: flex; border-bottom: 1px solid var(--border); padding: 0 32px; }
-  nav button { background: none; border: none; color: var(--text3); font-size: 13px; padding: 14px 18px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
-  nav button:hover { color: var(--text); }
-  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
-  main { max-width: 1280px; margin: 0 auto; padding: 32px; }
-  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
-  .panel-title { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-  .upload-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-  .upload-card { border: 1px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all .15s; position: relative; }
-  .upload-card:hover { border-color: var(--accent2); background: rgba(200,169,110,.04); }
-  .upload-card.loaded { border-color: var(--green); border-style: solid; }
-  .upload-card input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
-  .upload-icon { font-size: 24px; margin-bottom: 8px; }
-  .upload-label { font-size: 12px; color: var(--text2); font-weight: 500; }
-  .upload-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
-  .upload-status { font-size: 11px; color: var(--green); margin-top: 6px; font-family: var(--font-mono); }
-  .month-row { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
-  .month-row label { font-size: 12px; color: var(--text2); }
-  .month-row input[type=month] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; font-family: var(--font-mono); }
-  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
-  .btn-primary { background: var(--accent); color: #0f0f11; }
-  .btn-primary:hover { background: #d4b87a; }
-  .btn-primary:disabled { background: var(--text3); cursor: not-allowed; }
-  .btn-ghost { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
-  .btn-ghost:hover { border-color: var(--accent2); color: var(--text); }
-  .btn-sm { padding: 5px 12px; font-size: 12px; }
-  .btn-green { background: var(--green); color: #0f0f11; }
-  .btn-green:hover { background: #5dc98e; }
-  .kpi-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 20px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
-  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 6px; }
-  .kpi-value { font-size: 22px; font-weight: 600; font-family: var(--font-mono); }
-  .kpi-value.accent { color: var(--accent); }
-  .kpi-value.green { color: var(--green); }
-  .tbl-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 10px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 600; }
-  td { padding: 11px 14px; border-bottom: 1px solid rgba(46,46,56,.6); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,.02); }
-  .num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
-  .badge-sim { background: rgba(76,175,125,.15); color: var(--green); }
-  .badge-nao { background: rgba(90,90,100,.2); color: var(--text3); }
-  .badge-casa { background: rgba(200,169,110,.12); color: var(--accent); }
-  .badge-orig { background: rgba(91,142,240,.12); color: var(--blue); }
-  .total-row td { background: var(--surface2); font-weight: 600; border-top: 1px solid var(--border); }
-  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; display: flex; align-items: center; justify-content: center; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 800px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 32px; }
-  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
-  .modal-name { font-size: 20px; font-weight: 600; }
-  .modal-sub { font-size: 12px; color: var(--text3); margin-top: 3px; font-family: var(--font-mono); }
-  .modal-close { background: none; border: none; color: var(--text3); font-size: 20px; cursor: pointer; }
-  .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .breakdown-row:last-child { border-bottom: none; }
-  .breakdown-label { font-size: 13px; color: var(--text2); }
-  .breakdown-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .breakdown-value { font-size: 15px; font-weight: 600; font-family: var(--font-mono); }
-  .breakdown-value.positive { color: var(--green); }
-  .section-divider { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin: 16px 0 8px; font-weight: 600; }
-  .total-line { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; margin-top: 8px; border-top: 2px solid var(--border); }
-  .total-line span:first-child { font-size: 13px; font-weight: 600; }
-  .total-line span:last-child { font-size: 22px; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
-  .status-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 10px; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
-  .status-dot.running { background: var(--accent); animation: pulse 1s infinite; }
-  .status-dot.done { background: var(--green); }
-  .status-dot.error { background: var(--red); }
-  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
-  .hist-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .hist-row:last-child { border-bottom: none; }
-  .hist-month { font-size: 14px; font-weight: 500; font-family: var(--font-mono); }
-  .hist-total { font-size: 14px; color: var(--accent); font-family: var(--font-mono); }
-  .hist-agents { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .param-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-  .param-row label { font-size: 12px; color: var(--text2); min-width: 140px; }
-  .param-row input, .param-row select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-family: var(--font-mono); width: 120px; }
-  .param-row input:focus, .param-row select:focus { outline: none; border-color: var(--accent2); }
-  .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .agent-params { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
-  .agent-card-p { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
-  .agent-card-p .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
-  .field-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .field-row label { font-size: 11px; color: var(--text3); }
-  .field-row input, .field-row select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 110px; }
-  .tramo-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
-  .tramo-table th { font-size: 10px; color: var(--text3); padding: 6px 8px; text-align: left; }
-  .tramo-table td { padding: 5px 8px; }
-  .tramo-table input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 100%; }
-  .progress-bar { background: var(--border); border-radius: 4px; height: 5px; margin-top: 4px; min-width: 80px; }
-  .progress-fill { background: var(--accent); border-radius: 4px; height: 5px; }
-  .retag-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .retag-total { font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
-
-  /* NOVOS CEDENTES REVIEW */
-  .review-banner { background: rgba(200,169,110,.08); border: 1px solid var(--accent2); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
-  .review-banner-text { font-size: 13px; color: var(--accent); }
-  .review-banner-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
-  .cedente-review-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .cedente-review-table th { font-size: 10px; color: var(--text3); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; }
-  .cedente-review-table td { padding: 10px 12px; border-bottom: 1px solid rgba(46,46,56,.5); vertical-align: middle; }
-  .cedente-review-table select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 5px; font-size: 12px; }
-  .tipo-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
-  .tipo-N { background: rgba(76,175,125,.15); color: var(--green); }
-  .tipo-H { background: rgba(200,169,110,.15); color: var(--accent); }
-  .tipo-REC { background: rgba(91,142,240,.15); color: var(--blue); }
-  .tipo-NA { background: rgba(90,90,100,.2); color: var(--text3); }
-  .tipo-IG { background: rgba(224,92,92,.12); color: var(--red); }
-
-  .hidden { display: none !important; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-  .cedentes-stats { display: flex; gap: 20px; font-size: 12px; color: var(--text3); }
-  .cedentes-stats span { color: var(--text2); font-family: var(--font-mono); margin-left: 4px; }
+:root{--bg:#0f0f11;--surface:#18181c;--surface2:#222228;--border:#2e2e38;--accent:#c8a96e;--accent2:#7c6b4e;--text:#e8e4dc;--text2:#9a9490;--text3:#5c5854;--green:#4caf7d;--red:#e05c5c;--blue:#5b8ef0;--radius:8px;--mono:'SF Mono','Fira Code',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+header{border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px}
+.logo{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.logo span{color:var(--text3);font-weight:400}
+.hdr-right{display:flex;align-items:center;gap:16px}
+.sync{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.sync.ok{color:var(--green)}.sync.err{color:var(--red)}
+nav{display:flex;border-bottom:1px solid var(--border);padding:0 32px}
+nav button{background:none;border:none;color:var(--text3);font-size:13px;padding:14px 18px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+nav button:hover{color:var(--text)}
+nav button.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{max-width:1280px;margin:0 auto;padding:32px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.ptitle{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:16px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.ucard{border:1px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .15s;position:relative}
+.ucard:hover{border-color:var(--accent2);background:rgba(200,169,110,.04)}
+.ucard.loaded{border-color:var(--green);border-style:solid}
+.ucard input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.ucard .icon{font-size:24px;margin-bottom:8px}
+.ucard .lbl{font-size:12px;color:var(--text2);font-weight:500}
+.ucard .sub{font-size:11px;color:var(--text3);margin-top:4px}
+.ucard .sta{font-size:11px;color:var(--green);margin-top:6px;font-family:var(--mono)}
+.mrow{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+.mrow label{font-size:12px;color:var(--text2)}
+.mrow input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:13px;font-family:var(--mono)}
+.btn{padding:10px 20px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+.btn-p{background:var(--accent);color:#0f0f11}.btn-p:hover{background:#d4b87a}.btn-p:disabled{background:var(--text3);cursor:not-allowed}
+.btn-g{background:var(--surface2);border:1px solid var(--border);color:var(--text2)}.btn-g:hover{border-color:var(--accent2);color:var(--text)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-green{background:var(--green);color:#0f0f11}.btn-green:hover{background:#5dc98e}
+.krow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.kpi .klbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px}
+.kpi .kval{font-size:22px;font-weight:600;font-family:var(--mono)}
+.kval.accent{color:var(--accent)}.kval.green{color:var(--green)}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;font-weight:600}
+td{padding:11px 14px;border-bottom:1px solid rgba(46,46,56,.6);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.num{text-align:right;font-family:var(--mono);font-size:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase}
+.b-sim{background:rgba(76,175,125,.15);color:var(--green)}.b-nao{background:rgba(90,90,100,.2);color:var(--text3)}
+.b-casa{background:rgba(200,169,110,.12);color:var(--accent)}.b-orig{background:rgba(91,142,240,.12);color:var(--blue)}
+.trow-tot td{background:var(--surface2);font-weight:600;border-top:1px solid var(--border)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:800px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:32px}
+.mhdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+.mname{font-size:20px;font-weight:600}
+.msub{font-size:12px;color:var(--text3);margin-top:3px;font-family:var(--mono)}
+.mclose{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer}
+.brow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.brow:last-child{border-bottom:none}
+.blbl{font-size:13px;color:var(--text2)}.bsub{font-size:11px;color:var(--text3);margin-top:2px}
+.bval{font-size:15px;font-weight:600;font-family:var(--mono)}.bval.pos{color:var(--green)}
+.sdiv{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin:16px 0 8px;font-weight:600}
+.tline{display:flex;justify-content:space-between;align-items:center;padding:16px 0 0;margin-top:8px;border-top:2px solid var(--border)}
+.tline span:last-child{font-size:22px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+.sbar{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:10px}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sdot.running{background:var(--accent);animation:pulse 1s infinite}.sdot.done{background:var(--green)}.sdot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pbar{background:var(--border);border-radius:4px;height:5px;margin-top:4px;min-width:80px}
+.pfill{background:var(--accent);border-radius:4px;height:5px}
+.retrow{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rettot{font-weight:600;color:var(--accent);font-family:var(--mono)}
+.hrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.hrow:last-child{border-bottom:none}
+.hmon{font-size:14px;font-weight:500;font-family:var(--mono)}
+.htot{font-size:14px;color:var(--accent);font-family:var(--mono)}
+.hags{font-size:11px;color:var(--text3);margin-top:2px}
+.rbanner{background:rgba(200,169,110,.08);border:1px solid var(--accent2);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.rbtxt{font-size:13px;color:var(--accent)}.rbsub{font-size:11px;color:var(--text3);margin-top:3px}
+.rev-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.rev-tbl th{font-size:10px;color:var(--text3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase}
+.rev-tbl td{padding:10px 12px;border-bottom:1px solid rgba(46,46,56,.5);vertical-align:middle}
+.rev-tbl select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px}
+.tbadge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+.t-N{background:rgba(76,175,125,.15);color:var(--green)}.t-H{background:rgba(200,169,110,.15);color:var(--accent)}
+.t-REC{background:rgba(91,142,240,.15);color:var(--blue)}.t-NA{background:rgba(90,90,100,.2);color:var(--text3)}.t-IG{background:rgba(224,92,92,.12);color:var(--red)}
+.cstats{display:flex;gap:20px;font-size:12px;color:var(--text3)}
+.cstats span{color:var(--text2);font-family:var(--mono);margin-left:4px}
+.prow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.prow label{font-size:12px;color:var(--text2);min-width:150px}
+.prow input,.prow select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;font-family:var(--mono);width:120px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.agrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.acard{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.acard .an{font-size:13px;font-weight:600;margin-bottom:10px}
+.frow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.frow label{font-size:11px;color:var(--text3)}
+.frow input,.frow select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;font-family:var(--mono);width:110px}
+.ttbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}
+.ttbl th{font-size:10px;color:var(--text3);padding:6px 8px;text-align:left}
+.ttbl td{padding:5px 8px}
+.ttbl input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;font-family:var(--mono);width:100%}
+.hidden{display:none!important}.tab-content{display:none}.tab-content.active{display:block}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">Lavoro <span>· Comissões</span></div>
-  <div class="header-right">
-    <div class="sync-status" id="syncStatus">Carregando base...</div>
-    <button class="btn btn-ghost btn-sm" onclick="setupToken()" id="tokenBtn" style="font-size:11px;padding:4px 10px">🔑 Token</button>
-    <div style="font-size:12px;color:var(--text3);font-family:var(--font-mono)" id="headerMonth">—</div>
+  <div class="hdr-right">
+    <div class="sync" id="syncSt">Carregando...</div>
+    <div style="font-size:11px;color:var(--text3)" id="hdrMonth">—</div>
+    <button class="btn btn-g btn-sm" onclick="setupToken()">🔑 Token</button>
   </div>
 </header>
-
 <nav>
   <button class="active" onclick="showTab('upload',this)">Upload & Cálculo</button>
   <button onclick="showTab('resultado',this)">Resultado</button>
   <button onclick="showTab('retaguarda',this)">Retaguarda</button>
   <button onclick="showTab('historico',this)">Histórico</button>
-  <button onclick="showTab('cedentes',this)">Base Cedentes</button>
+  <button onclick="showTab('cedentes',this)">Cedentes</button>
   <button onclick="showTab('params',this)">Parâmetros</button>
 </nav>
-
 <main>
 
-<!-- UPLOAD TAB -->
+<!-- UPLOAD -->
 <div class="tab-content active" id="tab-upload">
   <div class="panel">
-    <div class="panel-title">Período de referência</div>
-    <div class="month-row">
-      <label>Mês/Ano:</label>
-      <input type="month" id="refMonth">
-    </div>
+    <div class="ptitle">Período</div>
+    <div class="mrow"><label>Mês/Ano:</label><input type="month" id="refMonth"></div>
   </div>
   <div class="panel">
-    <div class="panel-title">Arquivos do mês</div>
+    <div class="ptitle">Arquivos do mês</div>
     <div class="upload-grid">
-      <div class="upload-card" id="card-avaliacao">
-        <input type="file" accept=".xls,.xlsx" onchange="handleFile('avaliacao',this)">
-        <div class="upload-icon">📊</div>
-        <div class="upload-label">Avaliação de Resultados</div>
-        <div class="upload-sub">AvaliacaoResultadosCedente.xls</div>
-        <div class="upload-status" id="status-avaliacao"></div>
-      </div>
-      <div class="upload-card" id="card-quitados">
+      <div class="ucard" id="card-quitados">
         <input type="file" accept=".xls,.xlsx" onchange="handleFile('quitados',this)">
-        <div class="upload-icon">✅</div>
-        <div class="upload-label">Títulos Quitados</div>
-        <div class="upload-sub">TitulosQuitados.xls</div>
-        <div class="upload-status" id="status-quitados"></div>
+        <div class="icon">✅</div><div class="lbl">Títulos Quitados</div>
+        <div class="sub">TitulosQuitados.xls</div><div class="sta" id="sta-quitados"></div>
       </div>
-      <div class="upload-card" id="card-carteira">
+      <div class="ucard" id="card-avaliacao">
+        <input type="file" accept=".xls,.xlsx" onchange="handleFile('avaliacao',this)">
+        <div class="icon">📊</div><div class="lbl">Avaliação de Resultados</div>
+        <div class="sub">AvaliacaoResultadosCedente.xls</div><div class="sta" id="sta-avaliacao"></div>
+      </div>
+      <div class="ucard" id="card-carteira">
         <input type="file" accept=".xls,.xlsx" onchange="handleFile('carteira',this)">
-        <div class="upload-icon">📁</div>
-        <div class="upload-label">Carteira (fim do mês)</div>
-        <div class="upload-sub">CarteiraEmAberto.xlsx</div>
-        <div class="upload-status" id="status-carteira"></div>
+        <div class="icon">📁</div><div class="lbl">Carteira (fim do mês)</div>
+        <div class="sub">CarteiraEmAberto.xlsx</div><div class="sta" id="sta-carteira"></div>
       </div>
     </div>
   </div>
   <div class="panel hidden" id="statusPanel">
-    <div class="status-bar">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusMsg"></span>
-    </div>
+    <div class="sbar"><div class="sdot" id="sdot"></div><span id="smsg"></span></div>
   </div>
-  <button class="btn btn-primary" id="calcBtn" onclick="calcular()" disabled>Calcular Comissões</button>
+  <button class="btn btn-p" id="calcBtn" onclick="calcular()" disabled>Calcular Comissões</button>
 </div>
 
-<!-- RESULTADO TAB -->
+<!-- RESULTADO -->
 <div class="tab-content" id="tab-resultado">
-  <!-- Review banner for new cedentes -->
-  <div class="review-banner hidden" id="reviewBanner">
-    <div>
-      <div class="review-banner-text">⚠ Cedentes novos detectados — revisão necessária</div>
-      <div class="review-banner-sub" id="reviewBannerSub"></div>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="showReviewModal()">Revisar e confirmar</button>
+  <div class="rbanner hidden" id="revBanner">
+    <div><div class="rbtxt">⚠ Cedentes novos — revisão necessária</div><div class="rbsub" id="revBannerSub"></div></div>
+    <button class="btn btn-p btn-sm" onclick="showRevModal()">Revisar e confirmar</button>
   </div>
-
-  <div class="kpi-row" id="kpiRow"></div>
+  <div class="krow" id="kpiRow"></div>
   <div class="panel">
-    <div class="panel-title">Comissões — Gerentes <button class="btn btn-ghost btn-sm" onclick="exportarResultado()">↓ Exportar</button></div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th>Gerente</th><th>Tipo</th><th>Meta</th>
-          <th class="num">Carteira</th><th class="num">Deságio</th>
-          <th class="num">Bônus Meta</th><th class="num">TAC</th>
-          <th class="num">Novos Clientes</th><th class="num">Total</th><th></th>
-        </tr></thead>
-        <tbody id="resultBody"></tbody>
-      </table>
+    <div class="ptitle">Comissões — Gerentes <button class="btn btn-g btn-sm" onclick="exportar()">↓ Exportar</button></div>
+    <div class="twrap">
+      <table><thead><tr>
+        <th>Gerente</th><th>Tipo</th><th>Meta</th>
+        <th class="num">Carteira</th><th class="num">Deságio</th>
+        <th class="num">Bônus Meta</th><th class="num">TAC</th>
+        <th class="num">Novos</th><th class="num">Total</th><th></th>
+      </tr></thead><tbody id="resTbody"></tbody></table>
     </div>
   </div>
 </div>
 
-<!-- RETAGUARDA TAB -->
+<!-- RETAGUARDA -->
 <div class="tab-content" id="tab-retaguarda">
-  <div class="kpi-row" id="kpiRetaguarda"></div>
-  <div class="panel">
-    <div class="panel-title">Distribuição do bolo — Retaguarda</div>
-    <div id="retaguardaContent"></div>
-  </div>
-  <div class="panel">
-    <div class="panel-title">Assistentes</div>
-    <div id="assistentesContent"></div>
-  </div>
+  <div class="krow" id="kpiRet"></div>
+  <div class="panel"><div class="ptitle">Bolo — Retaguarda</div><div id="retContent"></div></div>
+  <div class="panel"><div class="ptitle">Assistentes</div><div id="assContent"></div></div>
 </div>
 
-<!-- HISTORICO TAB -->
+<!-- HISTORICO -->
 <div class="tab-content" id="tab-historico">
-  <div class="panel">
-    <div class="panel-title">Histórico de meses calculados</div>
-    <div id="historicoContent"></div>
-  </div>
+  <div class="panel"><div class="ptitle">Histórico</div><div id="histContent"></div></div>
 </div>
 
-<!-- CEDENTES TAB -->
+<!-- CEDENTES -->
 <div class="tab-content" id="tab-cedentes">
   <div class="panel">
-    <div class="panel-title">
-      Base de Cedentes
-      <div class="cedentes-stats" id="cedentesStats"></div>
-    </div>
+    <div class="ptitle">Base de Cedentes <div class="cstats" id="cstats"></div></div>
     <div style="display:flex;gap:10px;margin-bottom:16px">
-      <input type="text" id="cedentesSearch" placeholder="Buscar cedente..." 
-        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;width:300px"
-        oninput="renderCedentesTable()">
-      <select id="cedentesFiltroTipo" onchange="renderCedentesTable()"
+      <input type="text" id="csearch" placeholder="Buscar..." oninput="renderCedentes()"
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;width:280px">
+      <select id="cfilter" onchange="renderCedentes()"
         style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px">
-        <option value="">Todos os tipos</option>
-        <option value="N">N — Novo</option>
-        <option value="H">H — Herdado</option>
-        <option value="REC">REC — Recuperado</option>
-        <option value="NA">NA — Não ativo</option>
-        <option value="IG">IG — Ignorar</option>
+        <option value="">Todos</option><option value="N">N</option><option value="H">H</option>
+        <option value="REC">REC</option><option value="NA">NA</option><option value="IG">IG</option>
       </select>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Cedente</th><th>Tipo</th><th>Ações</th></tr></thead>
-        <tbody id="cedentesBody"></tbody>
-      </table>
-    </div>
+    <div class="twrap"><table><thead><tr><th>Cedente</th><th>Tipo</th><th>Ação</th></tr></thead>
+      <tbody id="cedBody"></tbody></table></div>
   </div>
 </div>
 
-<!-- PARAMS TAB -->
+<!-- PARAMS -->
 <div class="tab-content" id="tab-params">
-  <div class="params-grid">
+  <div class="pgrid">
     <div>
+      <div class="panel"><div class="ptitle">Por gerente</div><div class="agrid" id="agParams"></div></div>
       <div class="panel">
-        <div class="panel-title">Configuração por gerente</div>
-        <div class="agent-params" id="agentParams"></div>
+        <div class="ptitle">Novos clientes</div>
+        <div class="prow"><label>% sobre DF (1º borderô)</label><input type="number" id="p_novos_pct" value="15" step="0.5"> %</div>
+        <div class="prow"><label>Mínimo (R$)</label><input type="number" id="p_novos_min" value="500"></div>
       </div>
       <div class="panel">
-        <div class="panel-title">Novos clientes</div>
-        <div class="param-row"><label>% sobre DF (1º borderô)</label><input type="number" id="p_novos_pct" value="15" step="0.5"> %</div>
-        <div class="param-row"><label>Mínimo por cliente</label>R$ <input type="number" id="p_novos_min" value="500"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Retaguarda</div>
-        <div class="param-row"><label>Valor por borderô (R$)</label><input type="number" id="p_retag_valor" value="10"></div>
-        <div class="param-row"><label>% Crédito</label><input type="number" id="p_retag_credito" value="31"> %</div>
-        <div class="param-row"><label>% Confirmação</label><input type="number" id="p_retag_conf" value="24"> %</div>
-        <div class="param-row"><label>% Tesouraria</label><input type="number" id="p_retag_tesour" value="10"> %</div>
-        <div class="param-row"><label>% Contabilidade</label><input type="number" id="p_retag_contab" value="10"> %</div>
-        <div class="param-row"><label>% Casa</label><input type="number" id="p_retag_casa" value="15"> %</div>
-        <div class="param-row"><label>% Contas a Pagar</label><input type="number" id="p_retag_cp" value="10"> %</div>
+        <div class="ptitle">Retaguarda</div>
+        <div class="prow"><label>R$/borderô</label><input type="number" id="p_ret_val" value="10"></div>
+        <div class="prow"><label>% Crédito</label><input type="number" id="p_ret_cred" value="31"> %</div>
+        <div class="prow"><label>% Confirmação</label><input type="number" id="p_ret_conf" value="24"> %</div>
+        <div class="prow"><label>% Tesouraria</label><input type="number" id="p_ret_tes" value="10"> %</div>
+        <div class="prow"><label>% Contabilidade</label><input type="number" id="p_ret_cont" value="10"> %</div>
+        <div class="prow"><label>% Casa</label><input type="number" id="p_ret_casa" value="15"> %</div>
+        <div class="prow"><label>% Contas a Pagar</label><input type="number" id="p_ret_cp" value="10"> %</div>
       </div>
     </div>
     <div>
-      <div class="panel">
-        <div class="panel-title">Tabelas de bônus por carteira</div>
-        <div id="tramoTables"></div>
-      </div>
+      <div class="panel"><div class="ptitle">Bônus por carteira</div><div id="tramoTbls"></div></div>
     </div>
   </div>
-  <button class="btn btn-primary" onclick="salvarParams()">Salvar Parâmetros</button>
+  <button class="btn btn-p" onclick="salvarParams()">Salvar</button>
 </div>
 
 </main>
 
-<!-- BREAKDOWN MODAL -->
+<!-- MODALS -->
 <div class="modal-bg hidden" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalContent"></div>
 </div>
-
-<!-- REVIEW MODAL -->
-<div class="modal-bg hidden" id="reviewModalBg" onclick="if(event.target===this)closeReviewModal()">
-  <div class="modal" id="reviewModalContent"></div>
+<div class="modal-bg hidden" id="revModalBg" onclick="if(event.target===this)closeRevModal()">
+  <div class="modal" id="revModalContent"></div>
 </div>
 
 <script>
 // =============================================
 // CONFIG
 // =============================================
-const GH_TOKEN = localStorage.getItem('lavoro_gh_token') || '';
-const GH_REPO  = 'trialrafael-sys/comissoes_lavoro';
-const GH_API   = 'https://api.github.com/repos/' + GH_REPO + '/contents/';
-const TIPOS = ['N','H','REC','NA','IG'];
-const TIPO_DESC = { N:'Novo', H:'Herdado', REC:'Recuperado', NA:'Não ativo', IG:'Ignorar' };
+const GH_REPO = 'trialrafael-sys/comissoes_lavoro';
+const GH_API  = 'https://api.github.com/repos/' + GH_REPO + '/contents/';
+const RAW     = 'https://raw.githubusercontent.com/' + GH_REPO + '/main/';
+const TIPOS   = ['N','H','REC','NA','IG'];
+const TIPO_DESC = {N:'Novo',H:'Herdado',REC:'Recuperado',NA:'Não ativo',IG:'Ignorar'};
+
+function ghToken(){ return localStorage.getItem('lavoro_gh_token')||''; }
+function setupToken(){
+  const t = prompt('GitHub Personal Access Token:', ghToken());
+  if(t!==null){ localStorage.setItem('lavoro_gh_token',t.trim()); location.reload(); }
+}
 
 // =============================================
 // STATE
 // =============================================
-let cedentesDB   = {};   // { "NOME": "N"|"H"|"REC"|"NA"|"IG" }
-let cedentesSHA  = null; // GitHub file SHA for updates
-let novosParaRevisar = []; // detected this run, pending confirmation
-let rawData      = { avaliacao: null, quitados: null, carteira: null };
+let cedentesDB   = {};
+let cedentesSHA  = null;
+let historico    = {};
+let historicSHA  = null;
+let tabela       = [];
+let riscoTCOBs   = new Set();
+let redutorK1    = 0.8;
+let novosParaRev = [];
+let rawData      = {quitados:null, avaliacao:null, carteira:null};
 let resultado    = null;
 let params       = null;
 
 // =============================================
-// GITHUB SYNC
+// GITHUB
 // =============================================
-async function ghGet(path) {
-  const r = await fetch(GH_API + path, {
-    headers: { Authorization: 'token ' + GH_TOKEN, Accept: 'application/vnd.github.v3+json' }
-  });
-  if (!r.ok) throw new Error('GH GET ' + path + ' → ' + r.status);
+async function ghGet(path){
+  const r = await fetch(GH_API+path,{headers:{Authorization:'token '+ghToken(),Accept:'application/vnd.github.v3+json'}});
+  if(!r.ok) throw new Error('GH GET '+path+' → '+r.status);
   return r.json();
 }
-
-async function ghPut(path, content, sha, message) {
-  const body = { message, content: btoa(unescape(encodeURIComponent(content))), sha };
-  const r = await fetch(GH_API + path, {
-    method: 'PUT',
-    headers: { Authorization: 'token ' + GH_TOKEN, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message || r.status); }
+async function ghPut(path,content,sha,msg){
+  const body={message:msg,content:btoa(unescape(encodeURIComponent(content))),sha};
+  const r=await fetch(GH_API+path,{method:'PUT',headers:{Authorization:'token '+ghToken(),'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const e=await r.json();throw new Error(e.message||r.status);}
   return r.json();
 }
+function setSyncStatus(state,msg){
+  const el=document.getElementById('syncSt');
+  el.textContent=msg; el.className='sync'+(state==='ok'?' ok':state==='err'?' err':'');
+}
 
-async function loadCedentesDB() {
-  try {
-    const data = await ghGet('cedentes.json');
-    cedentesSHA = data.sha;
-    cedentesDB = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
-    setSyncStatus('ok', `Base: ${Object.keys(cedentesDB).length} cedentes`);
-  } catch(e) {
-    setSyncStatus('err', 'Erro ao carregar base: ' + e.message);
+async function loadAll(){
+  setSyncStatus('','Carregando...');
+  try{
+    // Load tabela
+    const tabData = await ghGet('tabela.json');
+    const tabJson = JSON.parse(decodeURIComponent(escape(atob(tabData.content.replace(/\n/g,'')))));
+    tabela      = tabJson.tabela || [];
+    riscoTCOBs  = new Set((tabJson.risco_tcobrans||[]).map(Number));
+    redutorK1   = tabJson.redutor_k1 ?? 0.8;
+
+    // Load cedentes
+    const cedData = await ghGet('cedentes.json');
+    cedentesSHA   = cedData.sha;
+    cedentesDB    = JSON.parse(decodeURIComponent(escape(atob(cedData.content.replace(/\n/g,'')))));
+
+    // Load historico
+    const hData  = await ghGet('historico_borderos.json');
+    historicSHA  = hData.sha;
+    historico    = JSON.parse(decodeURIComponent(escape(atob(hData.content.replace(/\n/g,'')))));
+
+    setSyncStatus('ok',`Base: ${Object.keys(cedentesDB).length} cedentes · ${Object.keys(historico).length} borderôs`);
+  }catch(e){
+    setSyncStatus('err','Erro: '+e.message);
   }
 }
 
-async function saveCedentesDB(newEntries, mes) {
-  setSyncStatus('running', 'Salvando base...');
-  try {
-    const content = JSON.stringify(cedentesDB, null, 2);
-    const result = await ghPut('cedentes.json', content, cedentesSHA,
-      `Atualiza cedentes — ${mes} (+${newEntries} novos)`);
-    cedentesSHA = result.content.sha;
-    setSyncStatus('ok', `Base: ${Object.keys(cedentesDB).length} cedentes`);
+async function saveCedentes(newCount, mes){
+  setSyncStatus('','Salvando cedentes...');
+  try{
+    const content=JSON.stringify(cedentesDB,null,2);
+    const res=await ghPut('cedentes.json',content,cedentesSHA,`Cedentes ${mes} +${newCount}`);
+    cedentesSHA=res.content.sha;
+    setSyncStatus('ok',`Base: ${Object.keys(cedentesDB).length} cedentes`);
     return true;
-  } catch(e) {
-    setSyncStatus('err', 'Erro ao salvar: ' + e.message);
-    return false;
-  }
+  }catch(e){ setSyncStatus('err','Erro ao salvar: '+e.message); return false; }
 }
 
-function setSyncStatus(state, msg) {
-  const el = document.getElementById('syncStatus');
-  el.textContent = msg;
-  el.className = 'sync-status' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+async function saveHistorico(newEntries, mes){
+  try{
+    const content=JSON.stringify(historico);
+    const res=await ghPut('historico_borderos.json',content,historicSHA,`Histórico ${mes} +${newEntries} borderôs`);
+    historicSHA=res.content.sha;
+  }catch(e){ console.error('Erro histórico:',e); }
 }
 
 // =============================================
 // PARAMS
 // =============================================
 const DEFAULT_AGENTS = [
-  { nome:'LUCIMAR',    tipo:'CASA', meta:15000000, pct_tac:.15, pct_h:1.0, pct_assist:.15, assist:'LUCELIA' },
-  { nome:'SOBRINHO',   tipo:'CASA', meta:11000000, pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'' },
-  { nome:'RHAVI',      tipo:'CASA', meta:4500000,  pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'LUCELIA' },
-  { nome:'Christiano', tipo:'CASA', meta:20000000, pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'KAREN' },
-  { nome:'Cabral',     tipo:'CASA', meta:10000000, pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'KAREN' },
-  { nome:'LUCAS',      tipo:'CASA', meta:999999999,pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'' },
+  {nome:'LUCIMAR',   tipo:'CASA',meta:15000000,pct_tac:.15,pct_h:1.0,pct_assist:.15,assist:'LUCELIA'},
+  {nome:'SOBRINHO',  tipo:'CASA',meta:11000000,pct_tac:.15,pct_h:1.0,pct_assist:0,  assist:''},
+  {nome:'RHAVI',     tipo:'CASA',meta:4500000, pct_tac:.15,pct_h:1.0,pct_assist:0,  assist:'LUCELIA'},
+  {nome:'Christiano',tipo:'CASA',meta:20000000,pct_tac:.15,pct_h:1.0,pct_assist:0,  assist:'KAREN'},
+  {nome:'Cabral',    tipo:'CASA',meta:10000000,pct_tac:.15,pct_h:1.0,pct_assist:0,  assist:'KAREN'},
+  {nome:'LUCAS',     tipo:'CASA',meta:999999999,pct_tac:.15,pct_h:1.0,pct_assist:0, assist:''},
 ];
 const DEFAULT_TRAMOS = {
   'LUCIMAR':   [{de:0,ate:13000000,bonus:0},{de:13000001,ate:15000000,bonus:7000},{de:15000001,ate:18000000,bonus:4000},{de:18000001,ate:20000000,bonus:5000},{de:20000001,ate:25000000,bonus:6000},{de:25000001,ate:30000000,bonus:8000},{de:30000001,ate:40000000,bonus:10000},{de:40000001,ate:999999999,bonus:12000}],
@@ -422,45 +363,41 @@ const DEFAULT_TRAMOS = {
   'LUCAS':     [{de:0,ate:999999999,bonus:0}],
 };
 
-function loadParams() {
-  try { const s = localStorage.getItem('lavoro_params'); if(s){ params=JSON.parse(s); return; } } catch(e){}
-  params = { agents: JSON.parse(JSON.stringify(DEFAULT_AGENTS)), tramos: JSON.parse(JSON.stringify(DEFAULT_TRAMOS)),
-    novos_pct:15, novos_min:500, retag_valor:10,
-    retag_credito:31, retag_conf:24, retag_tesour:10, retag_contab:10, retag_casa:15, retag_cp:10 };
+function loadParams(){
+  try{const s=localStorage.getItem('lavoro_params');if(s){params=JSON.parse(s);return;}}catch(e){}
+  params={agents:JSON.parse(JSON.stringify(DEFAULT_AGENTS)),tramos:JSON.parse(JSON.stringify(DEFAULT_TRAMOS)),
+    novos_pct:15,novos_min:500,ret_val:10,ret_cred:31,ret_conf:24,ret_tes:10,ret_cont:10,ret_casa:15,ret_cp:10};
 }
-function getAgentParam(nome) { return params.agents.find(a=>a.nome===nome) || {tipo:'CASA',meta:0,pct_tac:.15,pct_h:1.0,pct_assist:0}; }
+function getAP(nome){ return params.agents.find(a=>a.nome===nome)||{tipo:'CASA',meta:0,pct_tac:.15,pct_h:1,pct_assist:0}; }
 
 // =============================================
 // TABS
 // =============================================
-function showTab(name, btn) {
+function showTab(name,btn){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   if(btn) btn.classList.add('active');
   if(name==='params') renderParams();
-  if(name==='historico') renderHistorico();
-  if(name==='cedentes') renderCedentesTable();
+  if(name==='historico') renderHist();
+  if(name==='cedentes') renderCedentes();
 }
 
 // =============================================
 // FILE HANDLING
 // =============================================
-function handleFile(type, input) {
-  const file = input.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      rawData[type] = XLSX.utils.sheet_to_json(ws, {defval:null});
+function handleFile(type,input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      rawData[type]=XLSX.utils.sheet_to_json(ws,{defval:null});
       document.getElementById('card-'+type).classList.add('loaded');
-      document.getElementById('status-'+type).textContent = '✓ ' + rawData[type].length + ' linhas';
-      document.getElementById('calcBtn').disabled = !rawData.avaliacao || !rawData.carteira;
-    } catch(err) {
-      document.getElementById('status-'+type).textContent = '✗ Erro';
-      console.error(err);
-    }
+      document.getElementById('sta-'+type).textContent='✓ '+rawData[type].length+' linhas';
+      document.getElementById('calcBtn').disabled=!rawData.quitados||!rawData.avaliacao||!rawData.carteira;
+    }catch(err){document.getElementById('sta-'+type).textContent='✗ Erro';console.error(err);}
   };
   reader.readAsArrayBuffer(file);
 }
@@ -468,492 +405,504 @@ function handleFile(type, input) {
 // =============================================
 // HELPERS
 // =============================================
-function fmt(n) { return 'R$ '+(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function normalizeAgente(a) {
+function fmt(n){return 'R$ '+(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function sf(v){return typeof v==='number'&&!isNaN(v)?v:(parseFloat(v)||0);}
+function normAg(a){
   if(!a) return '';
-  a = String(a).trim();
-  return {'christiano':'Christiano','CHRISTIANO':'Christiano','cabral':'Cabral','CABRAL':'Cabral'}[a] || a;
+  a=String(a).trim();
+  return {'christiano':'Christiano','CHRISTIANO':'Christiano','cabral':'Cabral','CABRAL':'Cabral'}[a]||a;
 }
-function isCedenteConhecido(nome) {
-  return String(nome||'').trim().toUpperCase() in cedentesDB;
+function lookupPct(taxa,tipo){
+  let pct=0;
+  for(const t of tabela){ if(taxa>=t.min) pct=t[tipo]||0; else break; }
+  return pct;
 }
-function tipoBadge(tipo) {
-  return `<span class="tipo-badge tipo-${tipo||'N'}">${tipo||'N'}</span>`;
-}
-
-// =============================================
-// CALCULATION ENGINE
-// =============================================
-function calcBonusMeta(nome, carteira) {
-  const tramos = params.tramos[nome] || [];
-  let bonus = 0;
-  for(const t of tramos) { if(carteira >= t.de && carteira <= t.ate){ bonus=t.bonus; break; } }
+function calcBonusMeta(nome,carteira){
+  const tramos=params.tramos[nome]||[];
+  let bonus=0;
+  for(const t of tramos){ if(carteira>=t.de&&carteira<=t.ate){bonus=t.bonus;break;} }
   for(let i=0;i<tramos.length-1;i++){
-    const next = tramos[i+1];
-    if(carteira >= next.de*0.98 && carteira < next.de){ bonus=next.bonus; break; }
+    const next=tramos[i+1];
+    if(carteira>=next.de*0.98&&carteira<next.de){bonus=next.bonus;break;}
   }
   return bonus;
 }
+function parseDate(s){
+  if(!s) return null;
+  try{
+    const str=String(s).trim();
+    // dd/mm/yyyy
+    const m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+    // yyyy-mm-dd
+    const m2=str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m2) return new Date(+m2[1],+m2[2]-1,+m2[3]);
+    const d=new Date(s);
+    return isNaN(d)?null:d;
+  }catch(e){return null;}
+}
+function dateDiffDays(a,b){
+  if(!a||!b) return 0;
+  return Math.round((a-b)/(1000*60*60*24));
+}
 
-function calcular() {
-  setStatus('running','Lendo dados de avaliação...');
+// =============================================
+// MOTOR DE CÁLCULO — replicando BASE LIQUIDADOS
+// =============================================
+function calcDesagio(quitados){
+  // Returns {ag: {comm, borderos_count}}
+  const byAg = {};
+  const novos = []; // new cedentes not in DB
+
+  for(const row of quitados){
+    const ag = normAg(row['AGENTE']||row['agente']);
+    if(!ag||ag==='nan') continue;
+
+    const ced    = String(row['CEDENTE']||row['cedente']||'').trim().toUpperCase();
+    const bord   = parseInt(row['BORDERO']||row['bordero'])||0;
+    const tcob   = parseInt(sf(row['TCOBRAN']||row['tcobran']))||0;
+
+    const doperRaw = row['DATAOPERACAO']||row['dataoperacao'];
+    const tvencRaw = row['TVENCUTIL']||row['Vencimento Útil'];
+    const tquitRaw = row['TQUITACAO'];
+
+    const doper = parseDate(doperRaw);
+    const tvenc = parseDate(tvencRaw);
+    const tquit = parseDate(tquitRaw);
+
+    if(!doper||!tvenc) continue;
+
+    const doperStr = doper.toISOString().slice(0,10);
+    const prazo    = dateDiffDays(tvenc,doper);
+
+    // Lookup taxa from historico
+    const key   = ced+'|'+bord+'|'+doperStr;
+    let entry   = historico[key];
+    if(!entry){
+      const cedOrig=String(row['CEDENTEORIG']||row['cedenteorig']||'').trim().toUpperCase();
+      entry=historico[cedOrig+'|'+bord+'|'+doperStr];
+    }
+    if(!entry){
+      // New bordero — add to historico for next month
+      // (will be updated when avaliacao is processed)
+      continue;
+    }
+
+    const taxa = entry.tdesc / 100;
+
+    const valor     = sf(row['VALOR']||row['valor']);
+    const desconto  = sf(row['DESCONTO']||row['desconto']);
+    const abat      = sf(row['ABATIMENTO']||row['abatimento']);
+    const total     = sf(row['TOTAL']||row['total']);
+    const descabat  = sf(row['DESCABAT']||row['descabat']);
+    const tarifaliq = sf(row['TARIFALIQ']||row['tarifaliq']);
+    const tliq      = parseInt(sf(row['TLIQUID']||row['tliquid']))||0;
+
+    // Replicate formulas
+    const agio        = (valor - desconto) * taxa * prazo / 30;          // AJ
+    const vaq         = valor - desconto - agio;                          // AK
+    const liqVsTotal  = total - (valor - desconto - abat);               // AP
+    const ajuste      = liqVsTotal < 0 ? -liqVsTotal : 0;               // AO
+    const rec         = total - vaq + tarifaliq + ajuste + descabat;     // AM
+
+    if(!rec||rec<=0||isNaN(rec)) continue;
+
+    // Tipo liquidação: RECOMPRA if TLIQUID=2 and (quitacao-vencimento)>30
+    const diasLiq  = tquit ? dateDiffDays(tquit,tvenc) : 0;
+    const tipoLiq  = (tliq===2 && diasLiq>30) ? 'RECOMPRA' : 'NORMAL';
+    if(tipoLiq!=='NORMAL') continue;
+
+    // Risco elevado via TCOBRAN
+    const emRisco = riscoTCOBs.has(tcob);
+
+    // Tipo cedente from DB
+    const tipoCed = (cedentesDB[ced]||'N').toUpperCase();
+
+    // % comissão from tabela
+    const pct = lookupPct(taxa, tipoCed==='NA'?'NA':tipoCed==='IG'?'IG':tipoCed==='H'?'H':tipoCed==='REC'?'REC':'N');
+
+    // Comissão gerente
+    let comm;
+    if(!emRisco){
+      comm = pct * rec;
+    } else if(ag==='LUCIMAR'){
+      comm = pct * rec;
+    } else {
+      comm = pct * rec * (1 - redutorK1);
+    }
+
+    if(!byAg[ag]) byAg[ag]={comm:0,borderos:new Set()};
+    byAg[ag].comm += comm;
+    byAg[ag].borderos.add(key);
+
+    // Detect new cedentes
+    if(!(ced in cedentesDB)){
+      novos.push({ced, ag, rec, comm: rec * lookupPct(taxa,'N') * (params.novos_pct||15)/100});
+    }
+  }
+
+  return {byAg, novos};
+}
+
+// =============================================
+// MAIN CALCULATE
+// =============================================
+async function calcular(){
   document.getElementById('statusPanel').classList.remove('hidden');
-  setTimeout(async () => {
-    try {
-      const mes = document.getElementById('refMonth').value || 'Mês não definido';
-      document.getElementById('headerMonth').textContent = mes;
+  setStatus('running','Processando títulos quitados...');
 
-      // 1. Parse AvaliacaoResultados
-      const av = rawData.avaliacao;
-      const byAgent = {};
-      const dfPorAgenteCedente = {};
+  setTimeout(async()=>{
+    try{
+      const mes=document.getElementById('refMonth').value||'—';
+      document.getElementById('hdrMonth').textContent=mes;
 
-      for(const row of av) {
-        const ag = normalizeAgente(row['AGENTE']||row['agente']);
+      // 1. Deságio from TitulosQuitados
+      const {byAg, novos} = calcDesagio(rawData.quitados);
+      novosParaRev = dedupeNovos(novos);
+
+      // 2. TAC from AvaliacaoResultados
+      setStatus('running','Calculando tarifas...');
+      const tacByAg = {};
+      const newBorderos = {};
+      for(const row of rawData.avaliacao){
+        const ag  = normAg(row['AGENTE']||row['agente']);
         if(!ag||ag==='nan') continue;
-        if(!byAgent[ag]) byAgent[ag] = {borderos:0, vtt:0, df:0, adicional:0};
-        byAgent[ag].borderos++;
-        byAgent[ag].vtt += parseFloat(row['VTT']||0);
-        byAgent[ag].df  += parseFloat(row['DF']||0);
-        byAgent[ag].adicional += parseFloat(row['ADICIONAL']||0);
+        const ced  = String(row['CEDENTE']||'').trim().toUpperCase();
+        const bord = parseInt(row['BORDERO']||0)||0;
+        const tdesc= parseFloat(row['TDESC']||0)||0;
+        const adic = parseFloat(row['ADICIONAL']||0)||0;
+        const ap   = getAP(ag);
+        if(!tacByAg[ag]) tacByAg[ag]=0;
+        tacByAg[ag] += adic * (ap.pct_tac||.15);
 
-        const ced = String(row['CEDENTE']||'').trim().toUpperCase();
-        if(ced) {
-          const key = ag+'||'+ced;
-          if(!dfPorAgenteCedente[key]) dfPorAgenteCedente[key]=0;
-          dfPorAgenteCedente[key] += parseFloat(row['DF']||0);
-        }
+        // Accumulate new borderos to historico
+        try{
+          const doper=parseDate(row['DATA_OPER']||row['data_oper']);
+          if(doper){
+            const dstr=doper.toISOString().slice(0,10);
+            const key=ced+'|'+bord+'|'+dstr;
+            if(!historico[key]) newBorderos[key]={tdesc,ag,data:dstr};
+          }
+        }catch(e){}
       }
 
-      // 2. Carteira por agente
+      // 3. Carteira per agent
       setStatus('running','Calculando carteira...');
-      const carteiraAg = {};
-      for(const row of rawData.carteira) {
-        const ag = normalizeAgente(row['agente']||row['AGENTE']);
+      const carteiraAg={};
+      for(const row of rawData.carteira){
+        const ag=normAg(row['agente']||row['AGENTE']);
         if(!ag||['JURIDICO','DIROPER','DIRETORIA','DIRCLI'].includes(ag)) continue;
-        carteiraAg[ag] = (carteiraAg[ag]||0) + parseFloat(row['valor']||row['VALOR']||0);
+        carteiraAg[ag]=(carteiraAg[ag]||0)+parseFloat(row['valor']||row['VALOR']||0);
       }
 
-      // 3. Detect new cedentes
-      setStatus('running','Detectando clientes novos...');
-      novosParaRevisar = [];
-      const novosComissao = {};
-
-      for(const [key, df] of Object.entries(dfPorAgenteCedente)) {
-        const [ag, ced] = key.split('||');
-        if(!isCedenteConhecido(ced)) {
-          const pct = (params.novos_pct||15)/100;
-          const min = params.novos_min||500;
-          const comm = Math.max(df*pct, min);
-          novosParaRevisar.push({ced, ag, df, comm, tipo:'N'});
-          novosComissao[ag] = (novosComissao[ag]||0) + comm;
-        }
+      // 4. Novos clientes commission
+      const novosComByAg={};
+      for(const n of novosParaRev){
+        const pct=(params.novos_pct||15)/100;
+        const minV=params.novos_min||500;
+        const c=Math.max(n.rec*pct, minV);
+        novosComByAg[n.ag]=(novosComByAg[n.ag]||0)+c;
       }
 
-      // 4. Build results
-      setStatus('running','Calculando comissões...');
-      const results = [];
-      for(const ap of params.agents) {
-        const agData = byAgent[ap.nome] || {borderos:0, vtt:0, df:0, adicional:0};
-        const carteira = carteiraAg[ap.nome]||0;
-        let desagio=0, bonusMeta=0, tac=0, novos=0;
-        if(ap.tipo==='CASA') {
-          desagio = agData.df * (ap.pct_h||1.0);
-          tac = agData.adicional * (ap.pct_tac||.15);
-          bonusMeta = calcBonusMeta(ap.nome, carteira);
-          novos = novosComissao[ap.nome]||0;
-        } else {
-          desagio = agData.vtt * ((ap.pct_orig||2)/100);
-        }
-        const bateuMeta = ap.meta > 0 && carteira >= ap.meta;
-        results.push({nome:ap.nome, tipo:ap.tipo, bateuMeta, carteira, desagio, bonusMeta, tac, novos,
-          total:desagio+bonusMeta+tac+novos, borderos:agData.borderos, vtt:agData.vtt, meta:ap.meta, assist:ap.assist});
+      // 5. Build results
+      setStatus('running','Consolidando...');
+      const results=[];
+      for(const ap of params.agents){
+        const ag=ap.nome;
+        const desagio = (byAg[ag]?.comm||0) * (ap.pct_h||1.0);
+        const tac     = tacByAg[ag]||0;
+        const carteira= carteiraAg[ag]||0;
+        const bonusMeta=calcBonusMeta(ag,carteira);
+        const novosC  = novosComByAg[ag]||0;
+        const total   = desagio+tac+bonusMeta+novosC;
+        const bateuMeta=ap.meta>0&&carteira>=ap.meta;
+        results.push({nome:ag,tipo:ap.tipo,bateuMeta,carteira,desagio,tac,bonusMeta,novos:novosC,
+          total,borderos:byAg[ag]?.borderos.size||0,meta:ap.meta,assist:ap.assist});
       }
 
-      // 5. Retaguarda
-      const totalBorderos = Object.values(byAgent).reduce((s,a)=>s+a.borderos,0);
-      const boloRetag = totalBorderos*(params.retag_valor||10);
-      const retaguarda = calcRetaguarda(boloRetag);
-      const assistentes = calcAssistentes(results);
+      // 6. Retaguarda
+      const totalBord=results.reduce((s,r)=>s+r.borderos,0);
+      const bolo=totalBord*(params.ret_val||10);
+      const retaguarda=calcRetaguarda(bolo);
+      const assistentes=calcAssistentes(results);
 
-      resultado = {mes, results, retaguarda, assistentes, totalBorderos, boloRetag, novosParaRevisar};
-      saveHistorico(mes, resultado);
+      resultado={mes,results,retaguarda,assistentes,novos:novosParaRev,totalBord,bolo};
+      saveHistLocal(mes,resultado);
 
-      setStatus('done', `Calculado — ${results.length} gerentes, ${novosParaRevisar.length} cedentes novos pendentes`);
+      // Update historico with new borderos from avaliacao
+      let newCount=0;
+      for(const[k,v] of Object.entries(newBorderos)){
+        if(!historico[k]){historico[k]=v;newCount++;}
+      }
+      if(newCount>0) await saveHistorico(newCount,mes);
+
+      setStatus('done',`Calculado — ${results.length} gerentes · ${novosParaRev.length} novos cedentes`);
       renderResultado();
       renderRetaguarda();
-
-      // Switch to resultado
       document.querySelectorAll('nav button')[1].click();
 
-    } catch(err) {
-      setStatus('error','Erro: '+err.message);
-      console.error(err);
-    }
-  }, 100);
+    }catch(err){setStatus('error','Erro: '+err.message);console.error(err);}
+  },100);
 }
 
-function calcRetaguarda(bolo) {
-  const p = params;
-  return [
-    {nome:'Crédito',        pct:p.retag_credito||31},
-    {nome:'Confirmação',    pct:p.retag_conf||24},
-    {nome:'Tesouraria',     pct:p.retag_tesour||10},
-    {nome:'Contabilidade',  pct:p.retag_contab||10},
-    {nome:'Casa',           pct:p.retag_casa||15},
-    {nome:'Contas a Pagar', pct:p.retag_cp||10},
-  ].map(s=>({...s, valor:bolo*s.pct/100}));
+function dedupeNovos(novos){
+  const seen=new Set();
+  return novos.filter(n=>{ if(seen.has(n.ced)) return false; seen.add(n.ced); return true; });
 }
 
-function calcAssistentes(results) {
-  const out = {};
-  for(const r of results) {
-    const ap = getAgentParam(r.nome);
+function calcRetaguarda(bolo){
+  const p=params;
+  return [{nome:'Crédito',pct:p.ret_cred||31},{nome:'Confirmação',pct:p.ret_conf||24},
+    {nome:'Tesouraria',pct:p.ret_tes||10},{nome:'Contabilidade',pct:p.ret_cont||10},
+    {nome:'Casa',pct:p.ret_casa||15},{nome:'Contas a Pagar',pct:p.ret_cp||10}]
+    .map(s=>({...s,valor:bolo*s.pct/100}));
+}
+
+function calcAssistentes(results){
+  const out={};
+  for(const r of results){
+    const ap=getAP(r.nome);
     if(!ap.assist||!ap.pct_assist) continue;
-    out[ap.assist] = (out[ap.assist]||0) + r.total*(ap.pct_assist||0);
+    out[ap.assist]=(out[ap.assist]||0)+r.total*ap.pct_assist;
   }
   return out;
 }
 
-function setStatus(state, msg) {
-  document.getElementById('statusDot').className = 'status-dot '+state;
-  document.getElementById('statusMsg').textContent = msg;
+function setStatus(state,msg){
+  document.getElementById('sdot').className='sdot '+state;
+  document.getElementById('smsg').textContent=msg;
 }
 
 // =============================================
 // RENDER RESULTADO
 // =============================================
-function renderResultado() {
+function renderResultado(){
   if(!resultado) return;
-  const {results, novosParaRevisar} = resultado;
+  const {results,novos}=resultado;
 
-  // Review banner
-  const banner = document.getElementById('reviewBanner');
-  if(novosParaRevisar.length > 0) {
+  // Banner
+  const banner=document.getElementById('revBanner');
+  if(novos.length>0){
     banner.classList.remove('hidden');
-    document.getElementById('reviewBannerSub').textContent =
-      `${novosParaRevisar.length} cedente(s) não encontrado(s) na base. Revise antes de fechar o mês.`;
-  } else {
-    banner.classList.add('hidden');
-  }
+    document.getElementById('revBannerSub').textContent=novos.length+' cedente(s) não encontrado(s) na base.';
+  } else banner.classList.add('hidden');
 
   // KPIs
-  const total = results.reduce((s,r)=>s+r.total,0);
-  document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Total Comissões</div><div class="kpi-value accent">${fmt(total)}</div></div>
-    <div class="kpi"><div class="kpi-label">Total Deságio</div><div class="kpi-value">${fmt(results.reduce((s,r)=>s+r.desagio,0))}</div></div>
-    <div class="kpi"><div class="kpi-label">Metas atingidas</div><div class="kpi-value green">${results.filter(r=>r.bateuMeta).length}/${results.length}</div></div>
-    <div class="kpi"><div class="kpi-label">Volume (VTT)</div><div class="kpi-value">${fmt(results.reduce((s,r)=>s+r.vtt,0))}</div></div>
-    <div class="kpi"><div class="kpi-label">Cedentes novos</div><div class="kpi-value ${novosParaRevisar.length>0?'accent':''}">${novosParaRevisar.length}</div></div>
+  const tot=results.reduce((s,r)=>s+r.total,0);
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi"><div class="klbl">Total Comissões</div><div class="kval accent">${fmt(tot)}</div></div>
+    <div class="kpi"><div class="klbl">Total Deságio</div><div class="kval">${fmt(results.reduce((s,r)=>s+r.desagio,0))}</div></div>
+    <div class="kpi"><div class="klbl">Metas atingidas</div><div class="kval green">${results.filter(r=>r.bateuMeta).length}/${results.length}</div></div>
+    <div class="kpi"><div class="klbl">TAC total</div><div class="kval">${fmt(results.reduce((s,r)=>s+r.tac,0))}</div></div>
+    <div class="kpi"><div class="klbl">Cedentes novos</div><div class="kval ${novos.length>0?'accent':''}">${novos.length}</div></div>
   `;
 
   // Table
-  const tbody = document.getElementById('resultBody');
-  let totD=0,totB=0,totT=0,totN=0,totTot=0;
-  tbody.innerHTML = results.filter(r=>r.total>0||r.carteira>0).map(r => {
-    totD+=r.desagio; totB+=r.bonusMeta; totT+=r.tac; totN+=r.novos; totTot+=r.total;
-    const pct = r.meta>0 ? Math.min(100,r.carteira/r.meta*100) : 0;
+  let td=0,tb=0,tt=0,tn=0,tot2=0;
+  const rows=results.filter(r=>r.total>0||r.carteira>0).map(r=>{
+    td+=r.desagio;tb+=r.bonusMeta;tt+=r.tac;tn+=r.novos;tot2+=r.total;
+    const pct=r.meta>0?Math.min(100,r.carteira/r.meta*100):0;
     return `<tr>
       <td style="font-weight:500">${r.nome}</td>
-      <td><span class="badge badge-${r.tipo.toLowerCase()}">${r.tipo}</span></td>
-      <td><span class="badge ${r.bateuMeta?'badge-sim':'badge-nao'}">${r.bateuMeta?'SIM':'NÃO'}</span></td>
-      <td class="num">${fmt(r.carteira)}<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">${pct.toFixed(0)}%</div></td>
+      <td><span class="badge b-${r.tipo.toLowerCase()}">${r.tipo}</span></td>
+      <td><span class="badge ${r.bateuMeta?'b-sim':'b-nao'}">${r.bateuMeta?'SIM':'NÃO'}</span></td>
+      <td class="num">${fmt(r.carteira)}<div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${pct.toFixed(0)}%</div></td>
       <td class="num">${fmt(r.desagio)}</td>
       <td class="num">${r.bonusMeta>0?fmt(r.bonusMeta):'<span style="color:var(--text3)">—</span>'}</td>
       <td class="num">${fmt(r.tac)}</td>
       <td class="num">${r.novos>0?fmt(r.novos):'<span style="color:var(--text3)">—</span>'}</td>
       <td class="num" style="font-weight:600;color:var(--accent)">${fmt(r.total)}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="showBreakdown('${r.nome}')">Detalhes</button></td>
+      <td><button class="btn btn-g btn-sm" onclick="showBreakdown('${r.nome}')">Detalhe</button></td>
     </tr>`;
-  }).join('') + `<tr class="total-row">
-    <td colspan="4">Total</td>
-    <td class="num">${fmt(totD)}</td><td class="num">${fmt(totB)}</td>
-    <td class="num">${fmt(totT)}</td><td class="num">${fmt(totN)}</td>
-    <td class="num" style="color:var(--accent)">${fmt(totTot)}</td><td></td>
-  </tr>`;
-}
+  }).join('');
 
-// =============================================
-// REVIEW MODAL — new cedentes
-// =============================================
-function showReviewModal() {
-  const items = novosParaRevisar;
-  if(!items.length) return;
-  const modal = document.getElementById('reviewModalContent');
-  modal.innerHTML = `
-    <div class="modal-header">
-      <div>
-        <div class="modal-name">Cedentes Novos — Revisão</div>
-        <div class="modal-sub">${items.length} cedente(s) não encontrado(s) na base · ${resultado.mes}</div>
-      </div>
-      <button class="modal-close" onclick="closeReviewModal()">✕</button>
-    </div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:16px">
-      Estes cedentes aparecem nos arquivos do mês mas não estão na base. Classifique cada um e confirme para adicioná-los. O bônus de novo cliente (${params.novos_pct}%) já foi calculado para todos.
-    </p>
-    <div class="tbl-wrap">
-    <table class="cedente-review-table">
-      <thead><tr><th>Cedente</th><th>Gerente</th><th>DF (R$)</th><th>Comissão novo</th><th>Tipo</th></tr></thead>
-      <tbody>
-        ${items.map((item,i) => `
-          <tr>
-            <td style="font-weight:500">${item.ced}</td>
-            <td style="color:var(--text2)">${item.ag}</td>
-            <td class="num">${fmt(item.df)}</td>
-            <td class="num" style="color:var(--green)">${fmt(item.comm)}</td>
-            <td>
-              <select id="tipo_${i}" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px">
-                ${TIPOS.map(t=>`<option value="${t}" ${t==='N'?'selected':''}>${t} — ${TIPO_DESC[t]}</option>`).join('')}
-              </select>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-      <button class="btn btn-ghost" onclick="closeReviewModal()">Cancelar</button>
-      <button class="btn btn-green" onclick="confirmarNovos()">✓ Confirmar e salvar na base</button>
-    </div>
-  `;
-  document.getElementById('reviewModalBg').classList.remove('hidden');
-}
-
-async function confirmarNovos() {
-  const items = novosParaRevisar;
-  let count = 0;
-  items.forEach((item, i) => {
-    const tipo = document.getElementById('tipo_'+i).value;
-    cedentesDB[item.ced] = tipo;
-    item.tipo = tipo;
-    count++;
-  });
-
-  closeReviewModal();
-  const ok = await saveCedentesDB(count, resultado.mes);
-  if(ok) {
-    novosParaRevisar = [];
-    document.getElementById('reviewBanner').classList.add('hidden');
-    renderCedentesTable();
-    alert(`✓ ${count} cedente(s) adicionado(s) à base e salvo no GitHub.`);
-  }
-}
-
-function closeReviewModal() {
-  document.getElementById('reviewModalBg').classList.add('hidden');
-}
-
-// =============================================
-// CEDENTES TABLE
-// =============================================
-function renderCedentesTable() {
-  const search = (document.getElementById('cedentesSearch')?.value||'').toUpperCase();
-  const filtroTipo = document.getElementById('cedentesFiltroTipo')?.value||'';
-  const entries = Object.entries(cedentesDB)
-    .filter(([k,v]) => (!search||k.includes(search)) && (!filtroTipo||v===filtroTipo))
-    .sort((a,b)=>a[0].localeCompare(b[0]));
-
-  // Stats
-  const counts = {};
-  for(const v of Object.values(cedentesDB)) counts[v]=(counts[v]||0)+1;
-  document.getElementById('cedentesStats').innerHTML =
-    TIPOS.map(t=>`<div>${t}: <span>${counts[t]||0}</span></div>`).join('') +
-    `<div>Total: <span>${Object.keys(cedentesDB).length}</span></div>`;
-
-  document.getElementById('cedentesBody').innerHTML = entries.map(([nome,tipo])=>`
-    <tr>
-      <td style="font-weight:500;font-size:13px">${nome}</td>
-      <td>${tipoBadge(tipo)} <span style="font-size:11px;color:var(--text3);margin-left:6px">${TIPO_DESC[tipo]||tipo}</span></td>
-      <td>
-        <select onchange="updateCedente('${nome.replace(/'/g,"\\'")}',this.value)"
-          style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:5px;font-size:11px">
-          ${TIPOS.map(t=>`<option value="${t}" ${t===tipo?'selected':''}>${t}</option>`).join('')}
-        </select>
-      </td>
-    </tr>
-  `).join('');
-}
-
-async function updateCedente(nome, tipo) {
-  cedentesDB[nome] = tipo;
-  renderCedentesTable();
-  await saveCedentesDB(0, 'edição manual');
+  document.getElementById('resTbody').innerHTML=rows+`
+    <tr class="trow-tot"><td colspan="4">Total</td>
+      <td class="num">${fmt(td)}</td><td class="num">${fmt(tb)}</td>
+      <td class="num">${fmt(tt)}</td><td class="num">${fmt(tn)}</td>
+      <td class="num" style="color:var(--accent)">${fmt(tot2)}</td><td></td></tr>`;
 }
 
 // =============================================
 // BREAKDOWN MODAL
 // =============================================
-function showBreakdown(nome) {
-  const r = resultado?.results.find(x=>x.nome===nome);
-  if(!r) return;
-  const metaPct = r.meta>0 ? (r.carteira/r.meta*100).toFixed(1) : '—';
-  document.getElementById('modalContent').innerHTML = `
-    <div class="modal-header">
-      <div>
-        <div class="modal-name">${r.nome}</div>
-        <div class="modal-sub">${r.tipo} · ${resultado.mes} · ${r.borderos} borderôs</div>
-      </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+function showBreakdown(nome){
+  const r=resultado?.results.find(x=>x.nome===nome); if(!r) return;
+  const pct=r.meta>0?(r.carteira/r.meta*100).toFixed(1):'—';
+  document.getElementById('modalContent').innerHTML=`
+    <div class="mhdr">
+      <div><div class="mname">${r.nome}</div><div class="msub">${r.tipo} · ${resultado.mes} · ${r.borderos} borderôs</div></div>
+      <button class="mclose" onclick="closeModal()">✕</button>
     </div>
-    <div class="section-divider">Volume operado</div>
-    <div class="breakdown-row">
-      <div><div class="breakdown-label">Volume total (VTT)</div></div>
-      <div class="breakdown-value">${fmt(r.vtt)}</div>
-    </div>
-    <div class="breakdown-row">
-      <div><div class="breakdown-label">Carteira fim do mês</div><div class="breakdown-sub">Meta: ${fmt(r.meta)} · ${metaPct}% atingido</div></div>
-      <div class="breakdown-value">${fmt(r.carteira)}</div>
-    </div>
-    <div class="section-divider">Componentes da comissão</div>
-    <div class="breakdown-row">
-      <div><div class="breakdown-label">Deságio (DF)</div><div class="breakdown-sub">Receita bruta das operações liquidadas</div></div>
-      <div class="breakdown-value positive">${fmt(r.desagio)}</div>
-    </div>
-    <div class="breakdown-row">
-      <div><div class="breakdown-label">TAC / Tarifas</div><div class="breakdown-sub">% sobre adicional dos borderôs</div></div>
-      <div class="breakdown-value positive">${fmt(r.tac)}</div>
-    </div>
-    <div class="breakdown-row">
-      <div><div class="breakdown-label">Bônus meta de carteira</div><div class="breakdown-sub">${r.bateuMeta?'✓ Meta atingida':'Meta não atingida'}</div></div>
-      <div class="breakdown-value ${r.bonusMeta>0?'positive':''}">${r.bonusMeta>0?fmt(r.bonusMeta):'—'}</div>
-    </div>
-    <div class="breakdown-row">
-      <div><div class="breakdown-label">Bônus clientes novos</div><div class="breakdown-sub">${params.novos_pct}% sobre DF do 1º borderô</div></div>
-      <div class="breakdown-value ${r.novos>0?'positive':''}">${r.novos>0?fmt(r.novos):'—'}</div>
-    </div>
-    <div class="total-line"><span>Total a receber</span><span>${fmt(r.total)}</span></div>
-    <div style="margin-top:20px"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Fechar</button></div>
+    <div class="sdiv">Volume</div>
+    <div class="brow"><div><div class="blbl">Carteira fim do mês</div><div class="bsub">Meta: ${fmt(r.meta)} · ${pct}% atingido</div></div><div class="bval">${fmt(r.carteira)}</div></div>
+    <div class="sdiv">Componentes</div>
+    <div class="brow"><div><div class="blbl">Deságio</div><div class="bsub">Comissão sobre títulos liquidados</div></div><div class="bval pos">${fmt(r.desagio)}</div></div>
+    <div class="brow"><div><div class="blbl">TAC / Tarifas</div><div class="bsub">% sobre adicional dos borderôs</div></div><div class="bval pos">${fmt(r.tac)}</div></div>
+    <div class="brow"><div><div class="blbl">Bônus meta de carteira</div><div class="bsub">${r.bateuMeta?'✓ Meta atingida':'Meta não atingida'}</div></div><div class="bval ${r.bonusMeta>0?'pos':''}">${r.bonusMeta>0?fmt(r.bonusMeta):'—'}</div></div>
+    <div class="brow"><div><div class="blbl">Bônus clientes novos</div><div class="bsub">${params.novos_pct}% sobre receita bruta</div></div><div class="bval ${r.novos>0?'pos':''}">${r.novos>0?fmt(r.novos):'—'}</div></div>
+    <div class="tline"><span>Total a receber</span><span>${fmt(r.total)}</span></div>
+    <div style="margin-top:20px"><button class="btn btn-g btn-sm" onclick="closeModal()">Fechar</button></div>
   `;
   document.getElementById('modalBg').classList.remove('hidden');
 }
-function closeModal() { document.getElementById('modalBg').classList.add('hidden'); }
+function closeModal(){ document.getElementById('modalBg').classList.add('hidden'); }
+
+// =============================================
+// REVIEW MODAL — novos cedentes
+// =============================================
+function showRevModal(){
+  const items=novosParaRev; if(!items.length) return;
+  document.getElementById('revModalContent').innerHTML=`
+    <div class="mhdr">
+      <div><div class="mname">Cedentes Novos</div><div class="msub">${items.length} não encontrado(s) na base · ${resultado.mes}</div></div>
+      <button class="mclose" onclick="closeRevModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Classifique cada cedente novo. O tipo define as regras de comissão futuras.</p>
+    <div class="twrap">
+    <table class="rev-tbl"><thead><tr><th>Cedente</th><th>Gerente</th><th>Tipo</th></tr></thead>
+    <tbody>${items.map((n,i)=>`<tr>
+      <td style="font-weight:500">${n.ced}</td>
+      <td style="color:var(--text2)">${n.ag}</td>
+      <td><select id="ntype_${i}">${TIPOS.map(t=>`<option value="${t}" ${t==='N'?'selected':''}>${t} — ${TIPO_DESC[t]}</option>`).join('')}</select></td>
+    </tr>`).join('')}</tbody></table></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-g" onclick="closeRevModal()">Cancelar</button>
+      <button class="btn btn-green" onclick="confirmarNovos()">✓ Confirmar e salvar</button>
+    </div>
+  `;
+  document.getElementById('revModalBg').classList.remove('hidden');
+}
+
+async function confirmarNovos(){
+  novosParaRev.forEach((n,i)=>{
+    const tipo=document.getElementById('ntype_'+i)?.value||'N';
+    cedentesDB[n.ced]=tipo;
+  });
+  closeRevModal();
+  const ok=await saveCedentes(novosParaRev.length,resultado.mes);
+  if(ok){ novosParaRev=[]; document.getElementById('revBanner').classList.add('hidden'); renderCedentes(); }
+}
+
+function closeRevModal(){ document.getElementById('revModalBg').classList.add('hidden'); }
 
 // =============================================
 // RETAGUARDA
 // =============================================
-function renderRetaguarda() {
+function renderRetaguarda(){
   if(!resultado) return;
-  const {retaguarda, assistentes, totalBorderos, boloRetag} = resultado;
-  document.getElementById('kpiRetaguarda').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Total Borderôs</div><div class="kpi-value">${totalBorderos}</div></div>
-    <div class="kpi"><div class="kpi-label">Bolo Retaguarda</div><div class="kpi-value accent">${fmt(boloRetag)}</div></div>
+  const {retaguarda,assistentes,totalBord,bolo}=resultado;
+  document.getElementById('kpiRet').innerHTML=`
+    <div class="kpi"><div class="klbl">Total Borderôs</div><div class="kval">${totalBord}</div></div>
+    <div class="kpi"><div class="klbl">Bolo Retaguarda</div><div class="kval accent">${fmt(bolo)}</div></div>
   `;
-  document.getElementById('retaguardaContent').innerHTML = retaguarda.map(s=>`
-    <div class="retag-row"><div><div style="font-weight:500">${s.nome}</div><div style="font-size:11px;color:var(--text3)">${s.pct}%</div></div>
-    <div class="retag-total">${fmt(s.valor)}</div></div>`).join('');
-  const ents = Object.entries(assistentes);
-  document.getElementById('assistentesContent').innerHTML = ents.length
-    ? ents.map(([n,v])=>`<div class="retag-row"><div style="font-weight:500">${n}</div><div class="retag-total">${fmt(v)}</div></div>`).join('')
-    : '<p style="color:var(--text3);font-size:13px">Nenhum assistente configurado.</p>';
+  document.getElementById('retContent').innerHTML=retaguarda.map(s=>`
+    <div class="retrow"><div><div style="font-weight:500">${s.nome}</div><div style="font-size:11px;color:var(--text3)">${s.pct}%</div></div>
+    <div class="rettot">${fmt(s.valor)}</div></div>`).join('');
+  const ents=Object.entries(assistentes);
+  document.getElementById('assContent').innerHTML=ents.length
+    ?ents.map(([n,v])=>`<div class="retrow"><div style="font-weight:500">${n}</div><div class="rettot">${fmt(v)}</div></div>`).join('')
+    :'<p style="color:var(--text3);font-size:13px">Nenhum assistente configurado.</p>';
 }
 
 // =============================================
-// HISTÓRICO (localStorage)
+// HISTÓRICO
 // =============================================
-function loadHistorico() { try{ return JSON.parse(localStorage.getItem('lavoro_hist')||'[]'); }catch(e){return [];} }
-function saveHistorico(mes, data) {
-  const h = loadHistorico(); const idx = h.findIndex(x=>x.mes===mes);
-  if(idx>=0) h[idx]={mes,data}; else h.unshift({mes,data});
-  localStorage.setItem('lavoro_hist', JSON.stringify(h.slice(0,24)));
+function saveHistLocal(mes,data){ try{const h=loadHistLocal();const idx=h.findIndex(x=>x.mes===mes);if(idx>=0)h[idx]={mes,data};else h.unshift({mes,data});localStorage.setItem('lavoro_hist',JSON.stringify(h.slice(0,24)));}catch(e){} }
+function loadHistLocal(){ try{return JSON.parse(localStorage.getItem('lavoro_hist')||'[]');}catch(e){return[];} }
+function renderHist(){
+  const hist=loadHistLocal();
+  document.getElementById('histContent').innerHTML=hist.length
+    ?hist.map(h=>{const tot=h.data.results?.reduce((s,r)=>s+r.total,0)||0;const ags=h.data.results?.filter(r=>r.total>0).map(r=>r.nome).join(', ')||'';
+      return `<div class="hrow"><div><div class="hmon">${h.mes}</div><div class="hags">${ags}</div></div>
+        <div style="display:flex;align-items:center;gap:12px"><div class="htot">${fmt(tot)}</div>
+        <button class="btn btn-g btn-sm" onclick="loadHistMes('${h.mes}')">Ver</button></div></div>`;}).join('')
+    :'<p style="color:var(--text3);font-size:13px">Nenhum mês calculado ainda.</p>';
 }
-function renderHistorico() {
-  const hist = loadHistorico();
-  document.getElementById('historicoContent').innerHTML = hist.length
-    ? hist.map(h=>{
-        const total = h.data.results?.reduce((s,r)=>s+r.total,0)||0;
-        const agents = h.data.results?.filter(r=>r.total>0).map(r=>r.nome).join(', ')||'';
-        return `<div class="hist-row">
-          <div><div class="hist-month">${h.mes}</div><div class="hist-agents">${agents}</div></div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <div class="hist-total">${fmt(total)}</div>
-            <button class="btn btn-ghost btn-sm" onclick="loadHistMes('${h.mes}')">Ver</button>
-          </div>
-        </div>`;
-      }).join('')
-    : '<p style="color:var(--text3);font-size:13px">Nenhum mês calculado ainda.</p>';
-}
-function loadHistMes(mes) {
-  const h = loadHistorico().find(x=>x.mes===mes); if(!h) return;
-  resultado=h.data; document.getElementById('headerMonth').textContent=mes;
+function loadHistMes(mes){
+  const h=loadHistLocal().find(x=>x.mes===mes); if(!h) return;
+  resultado=h.data; document.getElementById('hdrMonth').textContent=mes;
   renderResultado(); renderRetaguarda();
   document.querySelectorAll('nav button')[1].click();
 }
 
 // =============================================
-// PARAMS UI
+// CEDENTES TABLE
 // =============================================
-function renderParams() {
-  document.getElementById('agentParams').innerHTML = params.agents.map((a,i)=>`
-    <div class="agent-card-p">
-      <div class="agent-name">${a.nome}</div>
-      <div class="field-row"><label>Tipo</label>
-        <select onchange="params.agents[${i}].tipo=this.value">
-          <option ${a.tipo==='CASA'?'selected':''}>CASA</option>
-          <option ${a.tipo==='ORIGINADOR'?'selected':''}>ORIGINADOR</option>
-        </select></div>
-      <div class="field-row"><label>Meta carteira</label>
-        <input type="number" value="${a.meta}" onchange="params.agents[${i}].meta=+this.value"></div>
-      <div class="field-row"><label>% TAC</label>
-        <input type="number" value="${(a.pct_tac||0)*100}" step="0.5" onchange="params.agents[${i}].pct_tac=+this.value/100"> %</div>
-      <div class="field-row"><label>% H (herdado)</label>
-        <input type="number" value="${(a.pct_h||1)*100}" step="1" onchange="params.agents[${i}].pct_h=+this.value/100"> %</div>
-      <div class="field-row"><label>% Assistente</label>
-        <input type="number" value="${(a.pct_assist||0)*100}" step="0.5" onchange="params.agents[${i}].pct_assist=+this.value/100"> %</div>
-    </div>`).join('');
-
-  document.getElementById('tramoTables').innerHTML = Object.entries(params.tramos).map(([ag,tramos])=>`
-    <div style="margin-bottom:20px">
-      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">${ag}</div>
-      <table class="tramo-table">
-        <thead><tr><th>De (R$)</th><th>Até (R$)</th><th>Bônus (R$)</th></tr></thead>
-        <tbody>${tramos.map((t,j)=>`<tr>
-          <td><input type="number" value="${t.de}" onchange="params.tramos['${ag}'][${j}].de=+this.value"></td>
-          <td><input type="number" value="${t.ate}" onchange="params.tramos['${ag}'][${j}].ate=+this.value"></td>
-          <td><input type="number" value="${t.bonus}" onchange="params.tramos['${ag}'][${j}].bonus=+this.value"></td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>`).join('');
-
-  ['novos_pct','novos_min','retag_valor','retag_credito','retag_conf','retag_tesour','retag_contab','retag_casa','retag_cp']
-    .forEach(k=>{ const el=document.getElementById('p_'+k); if(el) el.value=params[k]||0; });
+function renderCedentes(){
+  const search=(document.getElementById('csearch')?.value||'').toUpperCase();
+  const filt=document.getElementById('cfilter')?.value||'';
+  const entries=Object.entries(cedentesDB)
+    .filter(([k,v])=>(!search||k.includes(search))&&(!filt||v===filt))
+    .sort((a,b)=>a[0].localeCompare(b[0]));
+  const counts={};
+  for(const v of Object.values(cedentesDB)) counts[v]=(counts[v]||0)+1;
+  document.getElementById('cstats').innerHTML=TIPOS.map(t=>`<div>${t}:<span>${counts[t]||0}</span></div>`).join('')+`<div>Total:<span>${Object.keys(cedentesDB).length}</span></div>`;
+  document.getElementById('cedBody').innerHTML=entries.map(([nome,tipo])=>`
+    <tr><td style="font-weight:500;font-size:13px">${nome}</td>
+    <td><span class="tbadge t-${tipo}">${tipo}</span> <span style="font-size:11px;color:var(--text3)">${TIPO_DESC[tipo]||tipo}</span></td>
+    <td><select onchange="updateCed('${nome.replace(/'/g,"\\'")}',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:5px;font-size:11px">
+      ${TIPOS.map(t=>`<option value="${t}" ${t===tipo?'selected':''}>${t}</option>`).join('')}
+    </select></td></tr>`).join('');
 }
 
-function salvarParams() {
-  ['novos_pct','novos_min','retag_valor','retag_credito','retag_conf','retag_tesour','retag_contab','retag_casa','retag_cp']
-    .forEach(k=>{ const el=document.getElementById('p_'+k); if(el) params[k]=parseFloat(el.value); });
-  localStorage.setItem('lavoro_params', JSON.stringify(params));
+async function updateCed(nome,tipo){
+  cedentesDB[nome]=tipo;
+  renderCedentes();
+  await saveCedentes(0,'edição manual');
+}
+
+// =============================================
+// PARAMS UI
+// =============================================
+function renderParams(){
+  document.getElementById('agParams').innerHTML=params.agents.map((a,i)=>`
+    <div class="acard"><div class="an">${a.nome}</div>
+      <div class="frow"><label>Tipo</label><select onchange="params.agents[${i}].tipo=this.value"><option ${a.tipo==='CASA'?'selected':''}>CASA</option><option ${a.tipo==='ORIGINADOR'?'selected':''}>ORIGINADOR</option></select></div>
+      <div class="frow"><label>Meta carteira</label><input type="number" value="${a.meta}" onchange="params.agents[${i}].meta=+this.value"></div>
+      <div class="frow"><label>% TAC</label><input type="number" value="${(a.pct_tac||0)*100}" step="0.5" onchange="params.agents[${i}].pct_tac=+this.value/100"> %</div>
+      <div class="frow"><label>% H (redutor)</label><input type="number" value="${(a.pct_h||1)*100}" step="1" onchange="params.agents[${i}].pct_h=+this.value/100"> %</div>
+      <div class="frow"><label>% Assistente</label><input type="number" value="${(a.pct_assist||0)*100}" step="0.5" onchange="params.agents[${i}].pct_assist=+this.value/100"> %</div>
+    </div>`).join('');
+
+  document.getElementById('tramoTbls').innerHTML=Object.entries(params.tramos).map(([ag,tr])=>`
+    <div style="margin-bottom:20px"><div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">${ag}</div>
+    <table class="ttbl"><thead><tr><th>De (R$)</th><th>Até (R$)</th><th>Bônus (R$)</th></tr></thead>
+    <tbody>${tr.map((t,j)=>`<tr>
+      <td><input type="number" value="${t.de}" onchange="params.tramos['${ag}'][${j}].de=+this.value"></td>
+      <td><input type="number" value="${t.ate}" onchange="params.tramos['${ag}'][${j}].ate=+this.value"></td>
+      <td><input type="number" value="${t.bonus}" onchange="params.tramos['${ag}'][${j}].bonus=+this.value"></td>
+    </tr>`).join('')}</tbody></table></div>`).join('');
+
+  ['novos_pct','novos_min','ret_val','ret_cred','ret_conf','ret_tes','ret_cont','ret_casa','ret_cp']
+    .forEach(k=>{const el=document.getElementById('p_'+k);if(el) el.value=params[k]||0;});
+}
+
+function salvarParams(){
+  ['novos_pct','novos_min','ret_val','ret_cred','ret_conf','ret_tes','ret_cont','ret_casa','ret_cp']
+    .forEach(k=>{const el=document.getElementById('p_'+k);if(el) params[k]=parseFloat(el.value);});
+  localStorage.setItem('lavoro_params',JSON.stringify(params));
   alert('Parâmetros salvos!');
 }
 
-function exportarResultado() {
+function exportar(){
   if(!resultado) return;
-  const rows = resultado.results.map(r=>({'Gerente':r.nome,'Tipo':r.tipo,'Meta':r.bateuMeta?'SIM':'NÃO',
+  const rows=resultado.results.map(r=>({'Gerente':r.nome,'Tipo':r.tipo,'Meta':r.bateuMeta?'SIM':'NÃO',
     'Carteira':r.carteira,'Deságio':r.desagio,'Bônus Meta':r.bonusMeta,'TAC':r.tac,'Novos':r.novos,'Total':r.total}));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Comissões');
-  XLSX.writeFile(wb, `Comissoes_${resultado.mes}.xlsx`);
-}
-
-// =============================================
-// TOKEN SETUP
-// =============================================
-function setupToken() {
-  const current = localStorage.getItem('lavoro_gh_token') || '';
-  const token = prompt('Cole seu GitHub Personal Access Token (permissão repo):\n\nEle fica salvo apenas no seu browser.', current);
-  if(token !== null) {
-    localStorage.setItem('lavoro_gh_token', token.trim());
-    location.reload();
-  }
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Comissões');
+  XLSX.writeFile(wb,`Comissoes_${resultado.mes}.xlsx`);
 }
 
 // =============================================
 // INIT
 // =============================================
 loadParams();
-loadCedentesDB();
-document.getElementById('refMonth').value = new Date().toISOString().slice(0,7);
-renderHistorico();
+loadAll();
+document.getElementById('refMonth').value=new Date().toISOString().slice(0,7);
+renderHist();
 </script>
 </body>
 </html>
