@@ -7,215 +7,186 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #0f0f11;
-    --surface: #18181c;
-    --surface2: #222228;
-    --border: #2e2e38;
-    --accent: #c8a96e;
-    --accent2: #7c6b4e;
-    --text: #e8e4dc;
-    --text2: #9a9490;
-    --text3: #5c5854;
-    --green: #4caf7d;
-    --red: #e05c5c;
-    --blue: #5b8ef0;
-    --radius: 8px;
-    --font-mono: 'SF Mono', 'Fira Code', monospace;
+    --bg: #0f0f11; --surface: #18181c; --surface2: #222228; --border: #2e2e38;
+    --accent: #c8a96e; --accent2: #7c6b4e; --text: #e8e4dc; --text2: #9a9490;
+    --text3: #5c5854; --green: #4caf7d; --red: #e05c5c; --blue: #5b8ef0;
+    --radius: 8px; --font-mono: 'SF Mono','Fira Code',monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
-
-  /* HEADER */
+  body { background: var(--bg); color: var(--text); font-family: 'Inter',system-ui,sans-serif; min-height: 100vh; }
   header { border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
-  .logo { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .logo { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
   .logo span { color: var(--text3); font-weight: 400; }
-  .header-month { font-size: 12px; color: var(--text2); font-family: var(--font-mono); }
-
-  /* NAV TABS */
-  nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 32px; }
-  nav button { background: none; border: none; color: var(--text3); font-size: 13px; padding: 14px 18px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .sync-status { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+  .sync-status.ok { color: var(--green); }
+  .sync-status.err { color: var(--red); }
+  nav { display: flex; border-bottom: 1px solid var(--border); padding: 0 32px; }
+  nav button { background: none; border: none; color: var(--text3); font-size: 13px; padding: 14px 18px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
   nav button:hover { color: var(--text); }
   nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  /* MAIN */
   main { max-width: 1280px; margin: 0 auto; padding: 32px; }
-
-  /* PANELS */
   .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
-  .panel-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 16px; font-weight: 600; }
-
-  /* UPLOAD ZONE */
+  .panel-title { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   .upload-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-  .upload-card { border: 1px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; }
-  .upload-card:hover { border-color: var(--accent2); background: rgba(200,169,110,0.04); }
+  .upload-card { border: 1px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all .15s; position: relative; }
+  .upload-card:hover { border-color: var(--accent2); background: rgba(200,169,110,.04); }
   .upload-card.loaded { border-color: var(--green); border-style: solid; }
   .upload-card input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
   .upload-icon { font-size: 24px; margin-bottom: 8px; }
   .upload-label { font-size: 12px; color: var(--text2); font-weight: 500; }
   .upload-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
   .upload-status { font-size: 11px; color: var(--green); margin-top: 6px; font-family: var(--font-mono); }
-
-  /* MONTH SELECTOR */
   .month-row { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
   .month-row label { font-size: 12px; color: var(--text2); }
-  .month-row input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; font-family: var(--font-mono); }
-
-  /* BUTTON */
-  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .month-row input[type=month] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; font-family: var(--font-mono); }
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
   .btn-primary { background: var(--accent); color: #0f0f11; }
   .btn-primary:hover { background: #d4b87a; }
   .btn-primary:disabled { background: var(--text3); cursor: not-allowed; }
   .btn-ghost { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
   .btn-ghost:hover { border-color: var(--accent2); color: var(--text); }
   .btn-sm { padding: 5px 12px; font-size: 12px; }
-
-  /* SUMMARY CARDS */
-  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .btn-green { background: var(--green); color: #0f0f11; }
+  .btn-green:hover { background: #5dc98e; }
+  .kpi-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 20px; }
   .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
-  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 6px; }
-  .kpi-value { font-size: 22px; font-weight: 600; color: var(--text); font-family: var(--font-mono); }
+  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 6px; }
+  .kpi-value { font-size: 22px; font-weight: 600; font-family: var(--font-mono); }
   .kpi-value.accent { color: var(--accent); }
   .kpi-value.green { color: var(--green); }
-
-  /* TABLE */
   .tbl-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 10px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 600; }
-  td { padding: 11px 14px; border-bottom: 1px solid rgba(46,46,56,0.6); vertical-align: top; }
+  th { text-align: left; padding: 10px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 600; }
+  td { padding: 11px 14px; border-bottom: 1px solid rgba(46,46,56,.6); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
+  tr:hover td { background: rgba(255,255,255,.02); }
   .num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
-  .name-cell { font-weight: 500; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
-  .badge-sim { background: rgba(76,175,125,0.15); color: var(--green); }
-  .badge-nao { background: rgba(90,90,100,0.2); color: var(--text3); }
-  .badge-casa { background: rgba(200,169,110,0.12); color: var(--accent); }
-  .badge-orig { background: rgba(91,142,240,0.12); color: var(--blue); }
+  .badge-sim { background: rgba(76,175,125,.15); color: var(--green); }
+  .badge-nao { background: rgba(90,90,100,.2); color: var(--text3); }
+  .badge-casa { background: rgba(200,169,110,.12); color: var(--accent); }
+  .badge-orig { background: rgba(91,142,240,.12); color: var(--blue); }
   .total-row td { background: var(--surface2); font-weight: 600; border-top: 1px solid var(--border); }
-
-  /* BREAKDOWN MODAL */
-  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 760px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 32px; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; display: flex; align-items: center; justify-content: center; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 800px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 32px; }
   .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
   .modal-name { font-size: 20px; font-weight: 600; }
   .modal-sub { font-size: 12px; color: var(--text3); margin-top: 3px; font-family: var(--font-mono); }
-  .modal-close { background: none; border: none; color: var(--text3); font-size: 20px; cursor: pointer; padding: 4px; }
+  .modal-close { background: none; border: none; color: var(--text3); font-size: 20px; cursor: pointer; }
   .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .breakdown-row:last-child { border-bottom: none; }
   .breakdown-label { font-size: 13px; color: var(--text2); }
   .breakdown-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .breakdown-value { font-size: 15px; font-weight: 600; font-family: var(--font-mono); color: var(--text); }
+  .breakdown-value { font-size: 15px; font-weight: 600; font-family: var(--font-mono); }
   .breakdown-value.positive { color: var(--green); }
-  .breakdown-value.accent { color: var(--accent); }
-  .section-divider { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin: 16px 0 8px; font-weight: 600; }
+  .section-divider { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin: 16px 0 8px; font-weight: 600; }
   .total-line { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; margin-top: 8px; border-top: 2px solid var(--border); }
   .total-line span:first-child { font-size: 13px; font-weight: 600; }
   .total-line span:last-child { font-size: 22px; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
-
-  /* PARAMS */
-  .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .param-group { margin-bottom: 16px; }
-  .param-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
-  .param-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-  .param-row input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-family: var(--font-mono); width: 120px; }
-  .param-row label { font-size: 12px; color: var(--text2); min-width: 120px; }
-  .param-row input:focus { outline: none; border-color: var(--accent2); }
-  .tramo-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .tramo-table th { font-size: 10px; color: var(--text3); padding: 6px 8px; text-align: left; }
-  .tramo-table td { padding: 5px 8px; }
-  .tramo-table input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 100%; }
-  .agent-params { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .agent-card-p { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
-  .agent-card-p .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
-  .field-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .field-row label { font-size: 11px; color: var(--text3); }
-  .field-row input, .field-row select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 110px; }
-  .field-row select option { background: var(--bg); }
-
-  /* STATUS BAR */
   .status-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 10px; }
   .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
   .status-dot.running { background: var(--accent); animation: pulse 1s infinite; }
   .status-dot.done { background: var(--green); }
   .status-dot.error { background: var(--red); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  /* HISTORY */
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
   .hist-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .hist-row:last-child { border-bottom: none; }
   .hist-month { font-size: 14px; font-weight: 500; font-family: var(--font-mono); }
   .hist-total { font-size: 14px; color: var(--accent); font-family: var(--font-mono); }
   .hist-agents { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .param-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .param-row label { font-size: 12px; color: var(--text2); min-width: 140px; }
+  .param-row input, .param-row select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-family: var(--font-mono); width: 120px; }
+  .param-row input:focus, .param-row select:focus { outline: none; border-color: var(--accent2); }
+  .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .agent-params { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .agent-card-p { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .agent-card-p .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+  .field-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .field-row label { font-size: 11px; color: var(--text3); }
+  .field-row input, .field-row select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 110px; }
+  .tramo-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+  .tramo-table th { font-size: 10px; color: var(--text3); padding: 6px 8px; text-align: left; }
+  .tramo-table td { padding: 5px 8px; }
+  .tramo-table input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: var(--font-mono); width: 100%; }
+  .progress-bar { background: var(--border); border-radius: 4px; height: 5px; margin-top: 4px; min-width: 80px; }
+  .progress-fill { background: var(--accent); border-radius: 4px; height: 5px; }
+  .retag-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .retag-total { font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
 
-  /* CEDENTE LIST */
-  .cedente-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .cedente-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 12px; display: flex; justify-content: space-between; }
-  .cedente-item .val { color: var(--accent); font-family: var(--font-mono); }
-  .new-badge { font-size: 9px; background: rgba(76,175,125,0.2); color: var(--green); padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  /* NOVOS CEDENTES REVIEW */
+  .review-banner { background: rgba(200,169,110,.08); border: 1px solid var(--accent2); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .review-banner-text { font-size: 13px; color: var(--accent); }
+  .review-banner-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .cedente-review-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .cedente-review-table th { font-size: 10px; color: var(--text3); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; }
+  .cedente-review-table td { padding: 10px 12px; border-bottom: 1px solid rgba(46,46,56,.5); vertical-align: middle; }
+  .cedente-review-table select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 5px; font-size: 12px; }
+  .tipo-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .tipo-N { background: rgba(76,175,125,.15); color: var(--green); }
+  .tipo-H { background: rgba(200,169,110,.15); color: var(--accent); }
+  .tipo-REC { background: rgba(91,142,240,.15); color: var(--blue); }
+  .tipo-NA { background: rgba(90,90,100,.2); color: var(--text3); }
+  .tipo-IG { background: rgba(224,92,92,.12); color: var(--red); }
 
-  /* PRINT REPORT */
-  @media print {
-    header, nav, .no-print { display: none; }
-    body { background: white; color: black; }
-    .modal { position: static; width: 100%; }
-  }
   .hidden { display: none !important; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
-
-  /* RETAGUARDA */
-  .retag-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .retag-total { font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
-  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; margin-top: 6px; }
-  .progress-fill { background: var(--accent); border-radius: 4px; height: 6px; transition: width 0.5s; }
+  .cedentes-stats { display: flex; gap: 20px; font-size: 12px; color: var(--text3); }
+  .cedentes-stats span { color: var(--text2); font-family: var(--font-mono); margin-left: 4px; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">Lavoro <span>· Comissões</span></div>
-  <div class="header-month" id="headerMonth">—</div>
+  <div class="header-right">
+    <div class="sync-status" id="syncStatus">Carregando base...</div>
+    <button class="btn btn-ghost btn-sm" onclick="setupToken()" id="tokenBtn" style="font-size:11px;padding:4px 10px">🔑 Token</button>
+    <div style="font-size:12px;color:var(--text3);font-family:var(--font-mono)" id="headerMonth">—</div>
+  </div>
 </header>
 
 <nav>
-  <button class="active" onclick="showTab('upload')">Upload & Cálculo</button>
-  <button onclick="showTab('resultado')">Resultado</button>
-  <button onclick="showTab('retaguarda')">Retaguarda</button>
-  <button onclick="showTab('historico')">Histórico</button>
-  <button onclick="showTab('params')">Parâmetros</button>
+  <button class="active" onclick="showTab('upload',this)">Upload & Cálculo</button>
+  <button onclick="showTab('resultado',this)">Resultado</button>
+  <button onclick="showTab('retaguarda',this)">Retaguarda</button>
+  <button onclick="showTab('historico',this)">Histórico</button>
+  <button onclick="showTab('cedentes',this)">Base Cedentes</button>
+  <button onclick="showTab('params',this)">Parâmetros</button>
 </nav>
 
 <main>
 
-<!-- ===== UPLOAD TAB ===== -->
+<!-- UPLOAD TAB -->
 <div class="tab-content active" id="tab-upload">
   <div class="panel">
     <div class="panel-title">Período de referência</div>
     <div class="month-row">
       <label>Mês/Ano:</label>
-      <input type="month" id="refMonth" value="">
+      <input type="month" id="refMonth">
     </div>
   </div>
-
   <div class="panel">
     <div class="panel-title">Arquivos do mês</div>
     <div class="upload-grid">
       <div class="upload-card" id="card-avaliacao">
-        <input type="file" accept=".xls,.xlsx" onchange="handleFile('avaliacao', this)">
+        <input type="file" accept=".xls,.xlsx" onchange="handleFile('avaliacao',this)">
         <div class="upload-icon">📊</div>
         <div class="upload-label">Avaliação de Resultados</div>
         <div class="upload-sub">AvaliacaoResultadosCedente.xls</div>
         <div class="upload-status" id="status-avaliacao"></div>
       </div>
       <div class="upload-card" id="card-quitados">
-        <input type="file" accept=".xls,.xlsx" onchange="handleFile('quitados', this)">
+        <input type="file" accept=".xls,.xlsx" onchange="handleFile('quitados',this)">
         <div class="upload-icon">✅</div>
         <div class="upload-label">Títulos Quitados</div>
         <div class="upload-sub">TitulosQuitados.xls</div>
         <div class="upload-status" id="status-quitados"></div>
       </div>
       <div class="upload-card" id="card-carteira">
-        <input type="file" accept=".xls,.xlsx" onchange="handleFile('carteira', this)">
+        <input type="file" accept=".xls,.xlsx" onchange="handleFile('carteira',this)">
         <div class="upload-icon">📁</div>
         <div class="upload-label">Carteira (fim do mês)</div>
         <div class="upload-sub">CarteiraEmAberto.xlsx</div>
@@ -223,55 +194,44 @@
       </div>
     </div>
   </div>
-
-  <div class="panel" id="statusPanel" style="display:none">
+  <div class="panel hidden" id="statusPanel">
     <div class="status-bar">
-      <div class="status-dot running" id="statusDot"></div>
-      <span id="statusMsg">Processando...</span>
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusMsg"></span>
     </div>
   </div>
-
-  <button class="btn btn-primary" id="calcBtn" onclick="calcular()" disabled>
-    Calcular Comissões
-  </button>
+  <button class="btn btn-primary" id="calcBtn" onclick="calcular()" disabled>Calcular Comissões</button>
 </div>
 
-<!-- ===== RESULTADO TAB ===== -->
+<!-- RESULTADO TAB -->
 <div class="tab-content" id="tab-resultado">
+  <!-- Review banner for new cedentes -->
+  <div class="review-banner hidden" id="reviewBanner">
+    <div>
+      <div class="review-banner-text">⚠ Cedentes novos detectados — revisão necessária</div>
+      <div class="review-banner-sub" id="reviewBannerSub"></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="showReviewModal()">Revisar e confirmar</button>
+  </div>
+
   <div class="kpi-row" id="kpiRow"></div>
   <div class="panel">
-    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>Comissões — Gerentes</span>
-      <button class="btn btn-ghost btn-sm" onclick="exportarResultado()">↓ Exportar</button>
-    </div>
+    <div class="panel-title">Comissões — Gerentes <button class="btn btn-ghost btn-sm" onclick="exportarResultado()">↓ Exportar</button></div>
     <div class="tbl-wrap">
-      <table id="resultTable">
-        <thead>
-          <tr>
-            <th>Gerente</th>
-            <th>Tipo</th>
-            <th>Bateu Meta</th>
-            <th class="num">Carteira R$</th>
-            <th class="num">Deságio</th>
-            <th class="num">Bônus Meta</th>
-            <th class="num">TAC / Tarifas</th>
-            <th class="num">Novos Clientes</th>
-            <th class="num">Total</th>
-            <th></th>
-          </tr>
-        </thead>
+      <table>
+        <thead><tr>
+          <th>Gerente</th><th>Tipo</th><th>Meta</th>
+          <th class="num">Carteira</th><th class="num">Deságio</th>
+          <th class="num">Bônus Meta</th><th class="num">TAC</th>
+          <th class="num">Novos Clientes</th><th class="num">Total</th><th></th>
+        </tr></thead>
         <tbody id="resultBody"></tbody>
       </table>
     </div>
   </div>
-
-  <div class="panel">
-    <div class="panel-title">Clientes novos detectados este mês</div>
-    <div class="cedente-grid" id="novosGrid"></div>
-  </div>
 </div>
 
-<!-- ===== RETAGUARDA TAB ===== -->
+<!-- RETAGUARDA TAB -->
 <div class="tab-content" id="tab-retaguarda">
   <div class="kpi-row" id="kpiRetaguarda"></div>
   <div class="panel">
@@ -284,17 +244,45 @@
   </div>
 </div>
 
-<!-- ===== HISTÓRICO TAB ===== -->
+<!-- HISTORICO TAB -->
 <div class="tab-content" id="tab-historico">
   <div class="panel">
     <div class="panel-title">Histórico de meses calculados</div>
-    <div id="historicoContent">
-      <p style="color:var(--text3);font-size:13px">Nenhum mês calculado ainda. Os dados ficam salvos localmente no browser.</p>
+    <div id="historicoContent"></div>
+  </div>
+</div>
+
+<!-- CEDENTES TAB -->
+<div class="tab-content" id="tab-cedentes">
+  <div class="panel">
+    <div class="panel-title">
+      Base de Cedentes
+      <div class="cedentes-stats" id="cedentesStats"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <input type="text" id="cedentesSearch" placeholder="Buscar cedente..." 
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;width:300px"
+        oninput="renderCedentesTable()">
+      <select id="cedentesFiltroTipo" onchange="renderCedentesTable()"
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px">
+        <option value="">Todos os tipos</option>
+        <option value="N">N — Novo</option>
+        <option value="H">H — Herdado</option>
+        <option value="REC">REC — Recuperado</option>
+        <option value="NA">NA — Não ativo</option>
+        <option value="IG">IG — Ignorar</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Cedente</th><th>Tipo</th><th>Ações</th></tr></thead>
+        <tbody id="cedentesBody"></tbody>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- ===== PARAMS TAB ===== -->
+<!-- PARAMS TAB -->
 <div class="tab-content" id="tab-params">
   <div class="params-grid">
     <div>
@@ -304,13 +292,12 @@
       </div>
       <div class="panel">
         <div class="panel-title">Novos clientes</div>
-        <div class="param-row"><label>% sobre receita bruta</label><input type="number" id="p_novos_pct" value="15" step="0.5"> %</div>
+        <div class="param-row"><label>% sobre DF (1º borderô)</label><input type="number" id="p_novos_pct" value="15" step="0.5"> %</div>
         <div class="param-row"><label>Mínimo por cliente</label>R$ <input type="number" id="p_novos_min" value="500"></div>
       </div>
       <div class="panel">
         <div class="panel-title">Retaguarda</div>
-        <div class="param-row"><label>Meta de borderôs/mês</label><input type="number" id="p_retag_meta" value="310"></div>
-        <div class="param-row"><label>Valor por borderô</label>R$ <input type="number" id="p_retag_valor" value="10"></div>
+        <div class="param-row"><label>Valor por borderô (R$)</label><input type="number" id="p_retag_valor" value="10"></div>
         <div class="param-row"><label>% Crédito</label><input type="number" id="p_retag_credito" value="31"> %</div>
         <div class="param-row"><label>% Confirmação</label><input type="number" id="p_retag_conf" value="24"> %</div>
         <div class="param-row"><label>% Tesouraria</label><input type="number" id="p_retag_tesour" value="10"> %</div>
@@ -322,7 +309,6 @@
     <div>
       <div class="panel">
         <div class="panel-title">Tabelas de bônus por carteira</div>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Configure os tramos de bônus por carteira para cada gerente. Edite diretamente na tabela.</p>
         <div id="tramoTables"></div>
       </div>
     </div>
@@ -333,284 +319,275 @@
 </main>
 
 <!-- BREAKDOWN MODAL -->
-<div class="modal-bg hidden" id="modalBg" onclick="closeModal(event)">
+<div class="modal-bg hidden" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div class="modal-bg hidden" id="reviewModalBg" onclick="if(event.target===this)closeReviewModal()">
+  <div class="modal" id="reviewModalContent"></div>
 </div>
 
 <script>
 // =============================================
+// CONFIG
+// =============================================
+const GH_TOKEN = localStorage.getItem('lavoro_gh_token') || '';
+const GH_REPO  = 'trialrafael-sys/comissoes_lavoro';
+const GH_API   = 'https://api.github.com/repos/' + GH_REPO + '/contents/';
+const TIPOS = ['N','H','REC','NA','IG'];
+const TIPO_DESC = { N:'Novo', H:'Herdado', REC:'Recuperado', NA:'Não ativo', IG:'Ignorar' };
+
+// =============================================
 // STATE
 // =============================================
-let rawData = { avaliacao: null, quitados: null, carteira: null };
-let resultado = null;
-let params = null;
-let clienteDB = {}; // CNPJ -> first seen month
+let cedentesDB   = {};   // { "NOME": "N"|"H"|"REC"|"NA"|"IG" }
+let cedentesSHA  = null; // GitHub file SHA for updates
+let novosParaRevisar = []; // detected this run, pending confirmation
+let rawData      = { avaliacao: null, quitados: null, carteira: null };
+let resultado    = null;
+let params       = null;
 
+// =============================================
+// GITHUB SYNC
+// =============================================
+async function ghGet(path) {
+  const r = await fetch(GH_API + path, {
+    headers: { Authorization: 'token ' + GH_TOKEN, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!r.ok) throw new Error('GH GET ' + path + ' → ' + r.status);
+  return r.json();
+}
+
+async function ghPut(path, content, sha, message) {
+  const body = { message, content: btoa(unescape(encodeURIComponent(content))), sha };
+  const r = await fetch(GH_API + path, {
+    method: 'PUT',
+    headers: { Authorization: 'token ' + GH_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message || r.status); }
+  return r.json();
+}
+
+async function loadCedentesDB() {
+  try {
+    const data = await ghGet('cedentes.json');
+    cedentesSHA = data.sha;
+    cedentesDB = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+    setSyncStatus('ok', `Base: ${Object.keys(cedentesDB).length} cedentes`);
+  } catch(e) {
+    setSyncStatus('err', 'Erro ao carregar base: ' + e.message);
+  }
+}
+
+async function saveCedentesDB(newEntries, mes) {
+  setSyncStatus('running', 'Salvando base...');
+  try {
+    const content = JSON.stringify(cedentesDB, null, 2);
+    const result = await ghPut('cedentes.json', content, cedentesSHA,
+      `Atualiza cedentes — ${mes} (+${newEntries} novos)`);
+    cedentesSHA = result.content.sha;
+    setSyncStatus('ok', `Base: ${Object.keys(cedentesDB).length} cedentes`);
+    return true;
+  } catch(e) {
+    setSyncStatus('err', 'Erro ao salvar: ' + e.message);
+    return false;
+  }
+}
+
+function setSyncStatus(state, msg) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  el.className = 'sync-status' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+}
+
+// =============================================
+// PARAMS
+// =============================================
 const DEFAULT_AGENTS = [
-  { nome: 'LUCIMAR',    tipo: 'CASA', meta: 15000000, pct_tac: 0.15, pct_assist: 0.15, assist: 'LUCELIA' },
-  { nome: 'SOBRINHO',   tipo: 'CASA', meta: 11000000, pct_tac: 0.15, pct_assist: 0.00, assist: '' },
-  { nome: 'RHAVI',      tipo: 'CASA', meta: 4500000,  pct_tac: 0.15, pct_assist: 0.00, assist: 'LUCELIA' },
-  { nome: 'Christiano', tipo: 'CASA', meta: 20000000, pct_tac: 0.15, pct_assist: 0.00, assist: 'KAREN' },
-  { nome: 'Cabral',     tipo: 'CASA', meta: 10000000, pct_tac: 0.15, pct_assist: 0.00, assist: 'KAREN' },
-  { nome: 'LUCAS',      tipo: 'CASA', meta: 999999999,pct_tac: 0.15, pct_assist: 0.00, assist: '' },
+  { nome:'LUCIMAR',    tipo:'CASA', meta:15000000, pct_tac:.15, pct_h:1.0, pct_assist:.15, assist:'LUCELIA' },
+  { nome:'SOBRINHO',   tipo:'CASA', meta:11000000, pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'' },
+  { nome:'RHAVI',      tipo:'CASA', meta:4500000,  pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'LUCELIA' },
+  { nome:'Christiano', tipo:'CASA', meta:20000000, pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'KAREN' },
+  { nome:'Cabral',     tipo:'CASA', meta:10000000, pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'KAREN' },
+  { nome:'LUCAS',      tipo:'CASA', meta:999999999,pct_tac:.15, pct_h:1.0, pct_assist:0,   assist:'' },
 ];
-
 const DEFAULT_TRAMOS = {
-  'LUCIMAR':    [{de:0,ate:13000000,bonus:0},{de:13000001,ate:15000000,bonus:7000},{de:15000001,ate:18000000,bonus:4000},{de:18000001,ate:20000000,bonus:5000},{de:20000001,ate:25000000,bonus:6000},{de:25000001,ate:30000000,bonus:8000},{de:30000001,ate:40000000,bonus:10000},{de:40000001,ate:999999999,bonus:12000}],
-  'SOBRINHO':   [{de:0,ate:8000000,bonus:0},{de:8000001,ate:11000000,bonus:3000},{de:11000001,ate:13000000,bonus:5000},{de:13000001,ate:15000000,bonus:7000},{de:15000001,ate:20000000,bonus:8000},{de:20000001,ate:25000000,bonus:10000},{de:25000001,ate:999999999,bonus:12000}],
-  'RHAVI':      [{de:0,ate:4500000,bonus:0},{de:4500001,ate:6500000,bonus:1000},{de:6500001,ate:9000000,bonus:2000},{de:9000001,ate:12000000,bonus:3000},{de:12000001,ate:15000000,bonus:4000},{de:15000001,ate:20000000,bonus:5000},{de:20000001,ate:999999999,bonus:7000}],
-  'Christiano': [{de:0,ate:5000000,bonus:0},{de:5000001,ate:10000000,bonus:4000},{de:10000001,ate:15000000,bonus:6000},{de:15000001,ate:20000000,bonus:9000},{de:20000001,ate:25000000,bonus:11000}],
-  'Cabral':     [{de:0,ate:10000000,bonus:0},{de:10000001,ate:999999999,bonus:0}],
-  'LUCAS':      [{de:0,ate:999999999,bonus:0}],
+  'LUCIMAR':   [{de:0,ate:13000000,bonus:0},{de:13000001,ate:15000000,bonus:7000},{de:15000001,ate:18000000,bonus:4000},{de:18000001,ate:20000000,bonus:5000},{de:20000001,ate:25000000,bonus:6000},{de:25000001,ate:30000000,bonus:8000},{de:30000001,ate:40000000,bonus:10000},{de:40000001,ate:999999999,bonus:12000}],
+  'SOBRINHO':  [{de:0,ate:8000000,bonus:0},{de:8000001,ate:11000000,bonus:3000},{de:11000001,ate:13000000,bonus:5000},{de:13000001,ate:15000000,bonus:7000},{de:15000001,ate:20000000,bonus:8000},{de:20000001,ate:25000000,bonus:10000},{de:25000001,ate:999999999,bonus:12000}],
+  'RHAVI':     [{de:0,ate:4500000,bonus:0},{de:4500001,ate:6500000,bonus:1000},{de:6500001,ate:9000000,bonus:2000},{de:9000001,ate:12000000,bonus:3000},{de:12000001,ate:15000000,bonus:4000},{de:15000001,ate:20000000,bonus:5000},{de:20000001,ate:999999999,bonus:7000}],
+  'Christiano':[{de:0,ate:5000000,bonus:0},{de:5000001,ate:10000000,bonus:4000},{de:10000001,ate:15000000,bonus:6000},{de:15000001,ate:20000000,bonus:9000},{de:20000001,ate:25000000,bonus:11000}],
+  'Cabral':    [{de:0,ate:999999999,bonus:0}],
+  'LUCAS':     [{de:0,ate:999999999,bonus:0}],
 };
 
 function loadParams() {
-  try {
-    const saved = localStorage.getItem('lavoro_params');
-    if (saved) { params = JSON.parse(saved); return; }
-  } catch(e) {}
-  params = {
-    agents: JSON.parse(JSON.stringify(DEFAULT_AGENTS)),
-    tramos: JSON.parse(JSON.stringify(DEFAULT_TRAMOS)),
-    novos_pct: 15,
-    novos_min: 500,
-    retag_meta: 310, retag_valor: 10,
-    retag_credito:31, retag_conf:24, retag_tesour:10, retag_contab:10, retag_casa:15, retag_cp:10
-  };
+  try { const s = localStorage.getItem('lavoro_params'); if(s){ params=JSON.parse(s); return; } } catch(e){}
+  params = { agents: JSON.parse(JSON.stringify(DEFAULT_AGENTS)), tramos: JSON.parse(JSON.stringify(DEFAULT_TRAMOS)),
+    novos_pct:15, novos_min:500, retag_valor:10,
+    retag_credito:31, retag_conf:24, retag_tesour:10, retag_contab:10, retag_casa:15, retag_cp:10 };
 }
-
-function loadClienteDB() {
-  try {
-    const saved = localStorage.getItem('lavoro_clientes');
-    if (saved) clienteDB = JSON.parse(saved);
-  } catch(e) {}
-}
-
-function saveClienteDB() {
-  localStorage.setItem('lavoro_clientes', JSON.stringify(clienteDB));
-}
-
-function loadHistorico() {
-  try {
-    const saved = localStorage.getItem('lavoro_historico');
-    return saved ? JSON.parse(saved) : [];
-  } catch(e) { return []; }
-}
-
-function saveHistorico(mes, data) {
-  const hist = loadHistorico();
-  const idx = hist.findIndex(h => h.mes === mes);
-  if (idx >= 0) hist[idx] = { mes, data };
-  else hist.unshift({ mes, data });
-  localStorage.setItem('lavoro_historico', JSON.stringify(hist.slice(0, 24)));
-}
+function getAgentParam(nome) { return params.agents.find(a=>a.nome===nome) || {tipo:'CASA',meta:0,pct_tac:.15,pct_h:1.0,pct_assist:0}; }
 
 // =============================================
 // TABS
 // =============================================
-function showTab(name) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
-  if (name === 'params') renderParams();
-  if (name === 'historico') renderHistorico();
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='params') renderParams();
+  if(name==='historico') renderHistorico();
+  if(name==='cedentes') renderCedentesTable();
 }
 
 // =============================================
 // FILE HANDLING
 // =============================================
 function handleFile(type, input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      rawData[type] = XLSX.utils.sheet_to_json(ws, { defval: null });
-      document.getElementById('card-' + type).classList.add('loaded');
-      document.getElementById('status-' + type).textContent = `✓ ${rawData[type].length} linhas`;
-      checkReady();
+      rawData[type] = XLSX.utils.sheet_to_json(ws, {defval:null});
+      document.getElementById('card-'+type).classList.add('loaded');
+      document.getElementById('status-'+type).textContent = '✓ ' + rawData[type].length + ' linhas';
+      document.getElementById('calcBtn').disabled = !rawData.avaliacao || !rawData.carteira;
     } catch(err) {
-      document.getElementById('status-' + type).textContent = '✗ Erro ao ler arquivo';
+      document.getElementById('status-'+type).textContent = '✗ Erro';
       console.error(err);
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-function checkReady() {
-  const ready = rawData.avaliacao && rawData.carteira;
-  document.getElementById('calcBtn').disabled = !ready;
+// =============================================
+// HELPERS
+// =============================================
+function fmt(n) { return 'R$ '+(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function normalizeAgente(a) {
+  if(!a) return '';
+  a = String(a).trim();
+  return {'christiano':'Christiano','CHRISTIANO':'Christiano','cabral':'Cabral','CABRAL':'Cabral'}[a] || a;
+}
+function isCedenteConhecido(nome) {
+  return String(nome||'').trim().toUpperCase() in cedentesDB;
+}
+function tipoBadge(tipo) {
+  return `<span class="tipo-badge tipo-${tipo||'N'}">${tipo||'N'}</span>`;
 }
 
 // =============================================
 // CALCULATION ENGINE
 // =============================================
-function normalizeAgente(a) {
-  if (!a) return '';
-  a = String(a).trim();
-  const map = { 'christiano': 'Christiano', 'cabral': 'Cabral', 'CABRAL': 'Cabral', 'CHRISTIANO': 'Christiano' };
-  return map[a] || a;
-}
-
-function getAgentParam(nome) {
-  return params.agents.find(a => a.nome === nome) || { tipo:'CASA', meta:0, pct_tac:0.15, pct_assist:0 };
-}
-
 function calcBonusMeta(nome, carteira) {
   const tramos = params.tramos[nome] || [];
   let bonus = 0;
-  for (const t of tramos) {
-    if (carteira >= t.de && carteira <= t.ate) { bonus = t.bonus; break; }
-  }
-  // 2% below rule: if within 2% of next tramo, pay that tramo
-  for (let i = 0; i < tramos.length - 1; i++) {
-    const next = tramos[i + 1];
-    const threshold = next.de * 0.98;
-    if (carteira >= threshold && carteira < next.de) { bonus = next.bonus; break; }
+  for(const t of tramos) { if(carteira >= t.de && carteira <= t.ate){ bonus=t.bonus; break; } }
+  for(let i=0;i<tramos.length-1;i++){
+    const next = tramos[i+1];
+    if(carteira >= next.de*0.98 && carteira < next.de){ bonus=next.bonus; break; }
   }
   return bonus;
 }
 
 function calcular() {
-  setStatus('running', 'Lendo dados de avaliação...');
-  setTimeout(() => {
+  setStatus('running','Lendo dados de avaliação...');
+  document.getElementById('statusPanel').classList.remove('hidden');
+  setTimeout(async () => {
     try {
       const mes = document.getElementById('refMonth').value || 'Mês não definido';
       document.getElementById('headerMonth').textContent = mes;
 
-      // --- 1. Parse AvaliacaoResultados ---
+      // 1. Parse AvaliacaoResultados
       const av = rawData.avaliacao;
       const byAgent = {};
-      for (const row of av) {
-        const ag = normalizeAgente(row['AGENTE'] || row['agente']);
-        if (!ag || ag === 'nan') continue;
-        if (!byAgent[ag]) byAgent[ag] = { borderos: 0, vtt: 0, df: 0, liquido: 0, adicional: 0, cedentes: new Set() };
+      const dfPorAgenteCedente = {};
+
+      for(const row of av) {
+        const ag = normalizeAgente(row['AGENTE']||row['agente']);
+        if(!ag||ag==='nan') continue;
+        if(!byAgent[ag]) byAgent[ag] = {borderos:0, vtt:0, df:0, adicional:0};
         byAgent[ag].borderos++;
-        byAgent[ag].vtt += parseFloat(row['VTT'] || 0);
-        byAgent[ag].df += parseFloat(row['DF'] || 0);
-        byAgent[ag].liquido += parseFloat(row['LIQUIDO'] || 0);
-        byAgent[ag].adicional += parseFloat(row['ADICIONAL'] || 0);
-        if (row['CEDENTE']) byAgent[ag].cedentes.add(String(row['CEDENTE']).trim().toUpperCase());
+        byAgent[ag].vtt += parseFloat(row['VTT']||0);
+        byAgent[ag].df  += parseFloat(row['DF']||0);
+        byAgent[ag].adicional += parseFloat(row['ADICIONAL']||0);
+
+        const ced = String(row['CEDENTE']||'').trim().toUpperCase();
+        if(ced) {
+          const key = ag+'||'+ced;
+          if(!dfPorAgenteCedente[key]) dfPorAgenteCedente[key]=0;
+          dfPorAgenteCedente[key] += parseFloat(row['DF']||0);
+        }
       }
 
-      // --- 2. Parse Carteira (fim do mês = tamanho da carteira por agente) ---
-      setStatus('running', 'Calculando carteira por gerente...');
-      const cart = rawData.carteira;
+      // 2. Carteira por agente
+      setStatus('running','Calculando carteira...');
       const carteiraAg = {};
-      const cnpjsByAgent = {};
-      for (const row of cart) {
-        const ag = normalizeAgente(row['agente'] || row['AGENTE']);
-        if (!ag || ['JURIDICO','DIROPER','DIRETORIA','DIRCLI'].includes(ag)) continue;
-        const val = parseFloat(row['valor'] || row['VALOR'] || 0);
-        if (!carteiraAg[ag]) carteiraAg[ag] = 0;
-        carteiraAg[ag] += val;
-        const cnpj = String(row['CNPJ Sacado'] || row['CNPJ'] || '').replace(/\D/g,'');
-        if (cnpj) {
-          if (!cnpjsByAgent[ag]) cnpjsByAgent[ag] = new Set();
-          cnpjsByAgent[ag].add(cnpj);
-        }
+      for(const row of rawData.carteira) {
+        const ag = normalizeAgente(row['agente']||row['AGENTE']);
+        if(!ag||['JURIDICO','DIROPER','DIRETORIA','DIRCLI'].includes(ag)) continue;
+        carteiraAg[ag] = (carteiraAg[ag]||0) + parseFloat(row['valor']||row['VALOR']||0);
       }
 
-      // --- 3. Detect new clients ---
-      setStatus('running', 'Detectando clientes novos...');
-      const novosClientes = [];
+      // 3. Detect new cedentes
+      setStatus('running','Detectando clientes novos...');
+      novosParaRevisar = [];
       const novosComissao = {};
-      
-      // For new client revenue, use av data grouped by cedente
-      const cederitesByAgent = {};
-      for (const row of av) {
-        const ag = normalizeAgente(row['AGENTE'] || row['agente']);
-        if (!ag || ag === 'nan') continue;
-        const ced = String(row['CEDENTE'] || '').trim().toUpperCase();
-        const key = ag + '|' + ced;
-        if (!cederitesByAgent[key]) cederitesByAgent[key] = 0;
-        cederitesByAgent[key] += parseFloat(row['DF'] || 0);
-      }
 
-      for (const [ag, cnpjs] of Object.entries(cnpjsByAgent)) {
-        novosComissao[ag] = 0;
-        for (const cnpj of cnpjs) {
-          if (!clienteDB[cnpj]) {
-            // New client!
-            clienteDB[cnpj] = mes;
-            // Find revenue for this client - approximate: use df proportional
-            // Better: use a percentage of the agent's total df for this new cedente
-            const pctNovos = (params.novos_pct || 15) / 100;
-            const minNovos = params.novos_min || 500;
-            // Estimate: new client bonus on first bordero revenue
-            // We'll use a per-new-client flat bonus for now since we can't link CNPJ to DF easily
-            novosClientes.push({ cnpj, agente: ag, mes });
-            // Commission: 15% of avg df per client for this agent
-            if (byAgent[ag]) {
-              const avgDf = byAgent[ag].df / (byAgent[ag].cedentes.size || 1);
-              const comm = Math.max(avgDf * pctNovos, minNovos);
-              novosComissao[ag] = (novosComissao[ag] || 0) + comm;
-            }
-          }
+      for(const [key, df] of Object.entries(dfPorAgenteCedente)) {
+        const [ag, ced] = key.split('||');
+        if(!isCedenteConhecido(ced)) {
+          const pct = (params.novos_pct||15)/100;
+          const min = params.novos_min||500;
+          const comm = Math.max(df*pct, min);
+          novosParaRevisar.push({ced, ag, df, comm, tipo:'N'});
+          novosComissao[ag] = (novosComissao[ag]||0) + comm;
         }
       }
 
-      // --- 4. Build result per agent ---
-      setStatus('running', 'Calculando comissões...');
-      const agentList = params.agents.map(a => a.nome);
+      // 4. Build results
+      setStatus('running','Calculando comissões...');
       const results = [];
-
-      for (const ag of agentList) {
-        const ap = getAgentParam(ag);
-        const agData = byAgent[ag] || { borderos:0, vtt:0, df:0, liquido:0, adicional:0 };
-        const carteira = carteiraAg[ag] || 0;
-
-        let desagio = 0, bonusMeta = 0, tac = 0, novos = 0;
-
-        if (ap.tipo === 'CASA') {
-          desagio = agData.df;
-          // TAC: pct_tac % of ADICIONAL total
-          tac = agData.adicional * (ap.pct_tac || 0.15);
-          // Bonus meta
-          bonusMeta = calcBonusMeta(ag, carteira);
-          // Novos
-          novos = novosComissao[ag] || 0;
+      for(const ap of params.agents) {
+        const agData = byAgent[ap.nome] || {borderos:0, vtt:0, df:0, adicional:0};
+        const carteira = carteiraAg[ap.nome]||0;
+        let desagio=0, bonusMeta=0, tac=0, novos=0;
+        if(ap.tipo==='CASA') {
+          desagio = agData.df * (ap.pct_h||1.0);
+          tac = agData.adicional * (ap.pct_tac||.15);
+          bonusMeta = calcBonusMeta(ap.nome, carteira);
+          novos = novosComissao[ap.nome]||0;
         } else {
-          // ORIGINADOR: % of VTT (receita bruta)
-          desagio = agData.vtt * ((ap.pct_orig || 2) / 100);
+          desagio = agData.vtt * ((ap.pct_orig||2)/100);
         }
-
-        const bateuMeta = carteira >= ap.meta;
-        const total = desagio + bonusMeta + tac + novos;
-
-        results.push({
-          nome: ag, tipo: ap.tipo, bateuMeta, carteira,
-          desagio, bonusMeta, tac, novos, total,
-          borderos: agData.borderos, vtt: agData.vtt,
-          meta: ap.meta, assist: ap.assist
-        });
+        const bateuMeta = ap.meta > 0 && carteira >= ap.meta;
+        results.push({nome:ap.nome, tipo:ap.tipo, bateuMeta, carteira, desagio, bonusMeta, tac, novos,
+          total:desagio+bonusMeta+tac+novos, borderos:agData.borderos, vtt:agData.vtt, meta:ap.meta, assist:ap.assist});
       }
 
-      // --- 5. Retaguarda ---
-      const totalBorderos = Object.values(byAgent).reduce((s,a) => s + a.borderos, 0);
-      const boloRetag = totalBorderos * (params.retag_valor || 10);
+      // 5. Retaguarda
+      const totalBorderos = Object.values(byAgent).reduce((s,a)=>s+a.borderos,0);
+      const boloRetag = totalBorderos*(params.retag_valor||10);
       const retaguarda = calcRetaguarda(boloRetag);
-
-      // --- 6. Assistentes ---
       const assistentes = calcAssistentes(results);
 
-      // Save
-      resultado = { mes, results, retaguarda, assistentes, novosClientes, totalBorderos, boloRetag };
-      saveClienteDB();
+      resultado = {mes, results, retaguarda, assistentes, totalBorderos, boloRetag, novosParaRevisar};
       saveHistorico(mes, resultado);
 
-      setStatus('done', `Calculado com sucesso — ${results.length} gerentes, ${novosClientes.length} clientes novos`);
+      setStatus('done', `Calculado — ${results.length} gerentes, ${novosParaRevisar.length} cedentes novos pendentes`);
       renderResultado();
       renderRetaguarda();
-      // Switch to resultado tab
+
+      // Switch to resultado
       document.querySelectorAll('nav button')[1].click();
 
     } catch(err) {
-      setStatus('error', 'Erro no cálculo: ' + err.message);
+      setStatus('error','Erro: '+err.message);
       console.error(err);
     }
   }, 100);
@@ -618,128 +595,199 @@ function calcular() {
 
 function calcRetaguarda(bolo) {
   const p = params;
-  const setores = [
-    { nome: 'Crédito',        pct: p.retag_credito || 31 },
-    { nome: 'Confirmação',    pct: p.retag_conf    || 24 },
-    { nome: 'Tesouraria',     pct: p.retag_tesour  || 10 },
-    { nome: 'Contabilidade',  pct: p.retag_contab  || 10 },
-    { nome: 'Casa',           pct: p.retag_casa    || 15 },
-    { nome: 'Contas a Pagar', pct: p.retag_cp      || 10 },
-  ];
-  return setores.map(s => ({ ...s, valor: bolo * s.pct / 100 }));
+  return [
+    {nome:'Crédito',        pct:p.retag_credito||31},
+    {nome:'Confirmação',    pct:p.retag_conf||24},
+    {nome:'Tesouraria',     pct:p.retag_tesour||10},
+    {nome:'Contabilidade',  pct:p.retag_contab||10},
+    {nome:'Casa',           pct:p.retag_casa||15},
+    {nome:'Contas a Pagar', pct:p.retag_cp||10},
+  ].map(s=>({...s, valor:bolo*s.pct/100}));
 }
 
 function calcAssistentes(results) {
   const out = {};
-  for (const r of results) {
-    if (!r.assist) continue;
+  for(const r of results) {
     const ap = getAgentParam(r.nome);
-    const pct = ap.pct_assist || 0;
-    if (pct === 0) continue;
-    if (!out[r.assist]) out[r.assist] = 0;
-    out[r.assist] += r.total * pct;
+    if(!ap.assist||!ap.pct_assist) continue;
+    out[ap.assist] = (out[ap.assist]||0) + r.total*(ap.pct_assist||0);
   }
   return out;
 }
 
 function setStatus(state, msg) {
-  const panel = document.getElementById('statusPanel');
-  panel.style.display = 'block';
-  const dot = document.getElementById('statusDot');
-  dot.className = 'status-dot ' + state;
+  document.getElementById('statusDot').className = 'status-dot '+state;
   document.getElementById('statusMsg').textContent = msg;
 }
 
 // =============================================
 // RENDER RESULTADO
 // =============================================
-function fmt(n) {
-  return 'R$ ' + (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function fmtN(n) {
-  return (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function renderResultado() {
-  if (!resultado) return;
-  const { results, novosClientes } = resultado;
+  if(!resultado) return;
+  const {results, novosParaRevisar} = resultado;
+
+  // Review banner
+  const banner = document.getElementById('reviewBanner');
+  if(novosParaRevisar.length > 0) {
+    banner.classList.remove('hidden');
+    document.getElementById('reviewBannerSub').textContent =
+      `${novosParaRevisar.length} cedente(s) não encontrado(s) na base. Revise antes de fechar o mês.`;
+  } else {
+    banner.classList.add('hidden');
+  }
 
   // KPIs
-  const total = results.reduce((s,r) => s + r.total, 0);
-  const totalDesagio = results.reduce((s,r) => s + r.desagio, 0);
-  const metaBatidas = results.filter(r => r.bateuMeta).length;
-  const totalVTT = results.reduce((s,r) => s + r.vtt, 0);
-  const totalBorderos = results.reduce((s,r) => s + r.borderos, 0);
+  const total = results.reduce((s,r)=>s+r.total,0);
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi"><div class="kpi-label">Total Comissões</div><div class="kpi-value accent">${fmt(total)}</div></div>
-    <div class="kpi"><div class="kpi-label">Total Deságio</div><div class="kpi-value">${fmt(totalDesagio)}</div></div>
-    <div class="kpi"><div class="kpi-label">Gerentes Atingiram Meta</div><div class="kpi-value green">${metaBatidas} / ${results.length}</div></div>
-    <div class="kpi"><div class="kpi-label">Volume Total (VTT)</div><div class="kpi-value">${fmt(totalVTT)}</div></div>
-    <div class="kpi"><div class="kpi-label">Clientes Novos</div><div class="kpi-value">${novosClientes.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Total Deságio</div><div class="kpi-value">${fmt(results.reduce((s,r)=>s+r.desagio,0))}</div></div>
+    <div class="kpi"><div class="kpi-label">Metas atingidas</div><div class="kpi-value green">${results.filter(r=>r.bateuMeta).length}/${results.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Volume (VTT)</div><div class="kpi-value">${fmt(results.reduce((s,r)=>s+r.vtt,0))}</div></div>
+    <div class="kpi"><div class="kpi-label">Cedentes novos</div><div class="kpi-value ${novosParaRevisar.length>0?'accent':''}">${novosParaRevisar.length}</div></div>
   `;
 
   // Table
   const tbody = document.getElementById('resultBody');
-  tbody.innerHTML = '';
-  let totD=0, totB=0, totT=0, totN=0, totTotal=0;
-  for (const r of results) {
-    if (r.total === 0 && r.carteira === 0) continue;
-    totD+=r.desagio; totB+=r.bonusMeta; totT+=r.tac; totN+=r.novos; totTotal+=r.total;
-    const metaPct = r.meta > 0 ? Math.min(100, (r.carteira/r.meta*100)) : 0;
-    tbody.innerHTML += `
-      <tr>
-        <td class="name-cell">${r.nome}</td>
-        <td><span class="badge badge-${r.tipo.toLowerCase()}">${r.tipo}</span></td>
-        <td><span class="badge ${r.bateuMeta ? 'badge-sim' : 'badge-nao'}">${r.bateuMeta ? 'SIM' : 'NÃO'}</span></td>
-        <td class="num">
-          ${fmt(r.carteira)}
-          <div class="progress-bar" style="margin-top:4px;min-width:80px"><div class="progress-fill" style="width:${metaPct}%"></div></div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">${metaPct.toFixed(0)}% da meta</div>
-        </td>
-        <td class="num">${fmt(r.desagio)}</td>
-        <td class="num">${r.bonusMeta > 0 ? fmt(r.bonusMeta) : '<span style="color:var(--text3)">—</span>'}</td>
-        <td class="num">${fmt(r.tac)}</td>
-        <td class="num">${r.novos > 0 ? fmt(r.novos) : '<span style="color:var(--text3)">—</span>'}</td>
-        <td class="num" style="font-weight:600;color:var(--accent)">${fmt(r.total)}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="showBreakdown('${r.nome}')">Detalhes</button></td>
-      </tr>
-    `;
-  }
-  tbody.innerHTML += `
-    <tr class="total-row">
-      <td colspan="4">Total</td>
-      <td class="num">${fmt(totD)}</td>
-      <td class="num">${fmt(totB)}</td>
-      <td class="num">${fmt(totT)}</td>
-      <td class="num">${fmt(totN)}</td>
-      <td class="num" style="color:var(--accent)">${fmt(totTotal)}</td>
-      <td></td>
-    </tr>
-  `;
+  let totD=0,totB=0,totT=0,totN=0,totTot=0;
+  tbody.innerHTML = results.filter(r=>r.total>0||r.carteira>0).map(r => {
+    totD+=r.desagio; totB+=r.bonusMeta; totT+=r.tac; totN+=r.novos; totTot+=r.total;
+    const pct = r.meta>0 ? Math.min(100,r.carteira/r.meta*100) : 0;
+    return `<tr>
+      <td style="font-weight:500">${r.nome}</td>
+      <td><span class="badge badge-${r.tipo.toLowerCase()}">${r.tipo}</span></td>
+      <td><span class="badge ${r.bateuMeta?'badge-sim':'badge-nao'}">${r.bateuMeta?'SIM':'NÃO'}</span></td>
+      <td class="num">${fmt(r.carteira)}<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">${pct.toFixed(0)}%</div></td>
+      <td class="num">${fmt(r.desagio)}</td>
+      <td class="num">${r.bonusMeta>0?fmt(r.bonusMeta):'<span style="color:var(--text3)">—</span>'}</td>
+      <td class="num">${fmt(r.tac)}</td>
+      <td class="num">${r.novos>0?fmt(r.novos):'<span style="color:var(--text3)">—</span>'}</td>
+      <td class="num" style="font-weight:600;color:var(--accent)">${fmt(r.total)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="showBreakdown('${r.nome}')">Detalhes</button></td>
+    </tr>`;
+  }).join('') + `<tr class="total-row">
+    <td colspan="4">Total</td>
+    <td class="num">${fmt(totD)}</td><td class="num">${fmt(totB)}</td>
+    <td class="num">${fmt(totT)}</td><td class="num">${fmt(totN)}</td>
+    <td class="num" style="color:var(--accent)">${fmt(totTot)}</td><td></td>
+  </tr>`;
+}
 
-  // Novos clientes
-  const novosGrid = document.getElementById('novosGrid');
-  if (novosClientes.length === 0) {
-    novosGrid.innerHTML = '<p style="color:var(--text3);font-size:13px">Nenhum cliente novo detectado.</p>';
-  } else {
-    novosGrid.innerHTML = novosClientes.map(c => `
-      <div class="cedente-item">
-        <span style="font-size:11px;color:var(--text2)">${c.agente} <span class="new-badge">NOVO</span></span>
-        <span class="val" style="font-size:10px;font-family:var(--font-mono)">${c.cnpj}</span>
+// =============================================
+// REVIEW MODAL — new cedentes
+// =============================================
+function showReviewModal() {
+  const items = novosParaRevisar;
+  if(!items.length) return;
+  const modal = document.getElementById('reviewModalContent');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-name">Cedentes Novos — Revisão</div>
+        <div class="modal-sub">${items.length} cedente(s) não encontrado(s) na base · ${resultado.mes}</div>
       </div>
-    `).join('');
+      <button class="modal-close" onclick="closeReviewModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:16px">
+      Estes cedentes aparecem nos arquivos do mês mas não estão na base. Classifique cada um e confirme para adicioná-los. O bônus de novo cliente (${params.novos_pct}%) já foi calculado para todos.
+    </p>
+    <div class="tbl-wrap">
+    <table class="cedente-review-table">
+      <thead><tr><th>Cedente</th><th>Gerente</th><th>DF (R$)</th><th>Comissão novo</th><th>Tipo</th></tr></thead>
+      <tbody>
+        ${items.map((item,i) => `
+          <tr>
+            <td style="font-weight:500">${item.ced}</td>
+            <td style="color:var(--text2)">${item.ag}</td>
+            <td class="num">${fmt(item.df)}</td>
+            <td class="num" style="color:var(--green)">${fmt(item.comm)}</td>
+            <td>
+              <select id="tipo_${i}" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px">
+                ${TIPOS.map(t=>`<option value="${t}" ${t==='N'?'selected':''}>${t} — ${TIPO_DESC[t]}</option>`).join('')}
+              </select>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeReviewModal()">Cancelar</button>
+      <button class="btn btn-green" onclick="confirmarNovos()">✓ Confirmar e salvar na base</button>
+    </div>
+  `;
+  document.getElementById('reviewModalBg').classList.remove('hidden');
+}
+
+async function confirmarNovos() {
+  const items = novosParaRevisar;
+  let count = 0;
+  items.forEach((item, i) => {
+    const tipo = document.getElementById('tipo_'+i).value;
+    cedentesDB[item.ced] = tipo;
+    item.tipo = tipo;
+    count++;
+  });
+
+  closeReviewModal();
+  const ok = await saveCedentesDB(count, resultado.mes);
+  if(ok) {
+    novosParaRevisar = [];
+    document.getElementById('reviewBanner').classList.add('hidden');
+    renderCedentesTable();
+    alert(`✓ ${count} cedente(s) adicionado(s) à base e salvo no GitHub.`);
   }
+}
+
+function closeReviewModal() {
+  document.getElementById('reviewModalBg').classList.add('hidden');
+}
+
+// =============================================
+// CEDENTES TABLE
+// =============================================
+function renderCedentesTable() {
+  const search = (document.getElementById('cedentesSearch')?.value||'').toUpperCase();
+  const filtroTipo = document.getElementById('cedentesFiltroTipo')?.value||'';
+  const entries = Object.entries(cedentesDB)
+    .filter(([k,v]) => (!search||k.includes(search)) && (!filtroTipo||v===filtroTipo))
+    .sort((a,b)=>a[0].localeCompare(b[0]));
+
+  // Stats
+  const counts = {};
+  for(const v of Object.values(cedentesDB)) counts[v]=(counts[v]||0)+1;
+  document.getElementById('cedentesStats').innerHTML =
+    TIPOS.map(t=>`<div>${t}: <span>${counts[t]||0}</span></div>`).join('') +
+    `<div>Total: <span>${Object.keys(cedentesDB).length}</span></div>`;
+
+  document.getElementById('cedentesBody').innerHTML = entries.map(([nome,tipo])=>`
+    <tr>
+      <td style="font-weight:500;font-size:13px">${nome}</td>
+      <td>${tipoBadge(tipo)} <span style="font-size:11px;color:var(--text3);margin-left:6px">${TIPO_DESC[tipo]||tipo}</span></td>
+      <td>
+        <select onchange="updateCedente('${nome.replace(/'/g,"\\'")}',this.value)"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:5px;font-size:11px">
+          ${TIPOS.map(t=>`<option value="${t}" ${t===tipo?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function updateCedente(nome, tipo) {
+  cedentesDB[nome] = tipo;
+  renderCedentesTable();
+  await saveCedentesDB(0, 'edição manual');
 }
 
 // =============================================
 // BREAKDOWN MODAL
 // =============================================
 function showBreakdown(nome) {
-  const r = resultado.results.find(x => x.nome === nome);
-  if (!r) return;
-  const metaPct = r.meta > 0 ? (r.carteira / r.meta * 100).toFixed(1) : '—';
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
+  const r = resultado?.results.find(x=>x.nome===nome);
+  if(!r) return;
+  const metaPct = r.meta>0 ? (r.carteira/r.meta*100).toFixed(1) : '—';
+  document.getElementById('modalContent').innerHTML = `
     <div class="modal-header">
       <div>
         <div class="modal-name">${r.nome}</div>
@@ -747,8 +795,7 @@ function showBreakdown(nome) {
       </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-
-    <div class="section-divider">Volume Operado</div>
+    <div class="section-divider">Volume operado</div>
     <div class="breakdown-row">
       <div><div class="breakdown-label">Volume total (VTT)</div></div>
       <div class="breakdown-value">${fmt(r.vtt)}</div>
@@ -757,226 +804,131 @@ function showBreakdown(nome) {
       <div><div class="breakdown-label">Carteira fim do mês</div><div class="breakdown-sub">Meta: ${fmt(r.meta)} · ${metaPct}% atingido</div></div>
       <div class="breakdown-value">${fmt(r.carteira)}</div>
     </div>
-
-    <div class="section-divider">Componentes da Comissão</div>
+    <div class="section-divider">Componentes da comissão</div>
     <div class="breakdown-row">
-      <div>
-        <div class="breakdown-label">Deságio (DF)</div>
-        <div class="breakdown-sub">Receita bruta das operações liquidadas</div>
-      </div>
+      <div><div class="breakdown-label">Deságio (DF)</div><div class="breakdown-sub">Receita bruta das operações liquidadas</div></div>
       <div class="breakdown-value positive">${fmt(r.desagio)}</div>
     </div>
     <div class="breakdown-row">
-      <div>
-        <div class="breakdown-label">TAC / Tarifas</div>
-        <div class="breakdown-sub">% sobre adicional dos borderôs</div>
-      </div>
+      <div><div class="breakdown-label">TAC / Tarifas</div><div class="breakdown-sub">% sobre adicional dos borderôs</div></div>
       <div class="breakdown-value positive">${fmt(r.tac)}</div>
     </div>
     <div class="breakdown-row">
-      <div>
-        <div class="breakdown-label">Bônus por meta de carteira</div>
-        <div class="breakdown-sub">${r.bateuMeta ? '✓ Meta atingida — tramo aplicado' : 'Meta não atingida'}</div>
-      </div>
-      <div class="breakdown-value ${r.bonusMeta > 0 ? 'positive' : ''}">${r.bonusMeta > 0 ? fmt(r.bonusMeta) : '—'}</div>
+      <div><div class="breakdown-label">Bônus meta de carteira</div><div class="breakdown-sub">${r.bateuMeta?'✓ Meta atingida':'Meta não atingida'}</div></div>
+      <div class="breakdown-value ${r.bonusMeta>0?'positive':''}">${r.bonusMeta>0?fmt(r.bonusMeta):'—'}</div>
     </div>
     <div class="breakdown-row">
-      <div>
-        <div class="breakdown-label">Bônus clientes novos</div>
-        <div class="breakdown-sub">${params.novos_pct}% sobre receita bruta do 1º borderô</div>
-      </div>
-      <div class="breakdown-value ${r.novos > 0 ? 'positive' : ''}">${r.novos > 0 ? fmt(r.novos) : '—'}</div>
+      <div><div class="breakdown-label">Bônus clientes novos</div><div class="breakdown-sub">${params.novos_pct}% sobre DF do 1º borderô</div></div>
+      <div class="breakdown-value ${r.novos>0?'positive':''}">${r.novos>0?fmt(r.novos):'—'}</div>
     </div>
-
-    <div class="total-line">
-      <span>Total a receber</span>
-      <span>${fmt(r.total)}</span>
-    </div>
-
-    <div style="margin-top:20px;display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm no-print" onclick="imprimirBreakdown('${nome}')">🖨 Imprimir relatório</button>
-      <button class="btn btn-ghost btn-sm no-print" onclick="closeModal()">Fechar</button>
-    </div>
+    <div class="total-line"><span>Total a receber</span><span>${fmt(r.total)}</span></div>
+    <div style="margin-top:20px"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Fechar</button></div>
   `;
   document.getElementById('modalBg').classList.remove('hidden');
 }
-
-function closeModal(e) {
-  if (!e || e.target === document.getElementById('modalBg')) {
-    document.getElementById('modalBg').classList.add('hidden');
-  }
-}
-
-function imprimirBreakdown(nome) {
-  window.print();
-}
+function closeModal() { document.getElementById('modalBg').classList.add('hidden'); }
 
 // =============================================
 // RETAGUARDA
 // =============================================
 function renderRetaguarda() {
-  if (!resultado) return;
-  const { retaguarda, assistentes, totalBorderos, boloRetag } = resultado;
-
+  if(!resultado) return;
+  const {retaguarda, assistentes, totalBorderos, boloRetag} = resultado;
   document.getElementById('kpiRetaguarda').innerHTML = `
     <div class="kpi"><div class="kpi-label">Total Borderôs</div><div class="kpi-value">${totalBorderos}</div></div>
     <div class="kpi"><div class="kpi-label">Bolo Retaguarda</div><div class="kpi-value accent">${fmt(boloRetag)}</div></div>
   `;
-
-  const retContent = document.getElementById('retaguardaContent');
-  retContent.innerHTML = retaguarda.map(s => `
-    <div class="retag-row">
-      <div>
-        <div style="font-weight:500">${s.nome}</div>
-        <div style="font-size:11px;color:var(--text3)">${s.pct}% do bolo</div>
-      </div>
-      <div class="retag-total">${fmt(s.valor)}</div>
-    </div>
-  `).join('');
-
-  const assistContent = document.getElementById('assistentesContent');
+  document.getElementById('retaguardaContent').innerHTML = retaguarda.map(s=>`
+    <div class="retag-row"><div><div style="font-weight:500">${s.nome}</div><div style="font-size:11px;color:var(--text3)">${s.pct}%</div></div>
+    <div class="retag-total">${fmt(s.valor)}</div></div>`).join('');
   const ents = Object.entries(assistentes);
-  if (ents.length === 0) {
-    assistContent.innerHTML = '<p style="color:var(--text3);font-size:13px">Nenhum assistente configurado.</p>';
-  } else {
-    assistContent.innerHTML = ents.map(([nome, val]) => `
-      <div class="retag-row">
-        <div style="font-weight:500">${nome}</div>
-        <div class="retag-total">${fmt(val)}</div>
-      </div>
-    `).join('');
-  }
+  document.getElementById('assistentesContent').innerHTML = ents.length
+    ? ents.map(([n,v])=>`<div class="retag-row"><div style="font-weight:500">${n}</div><div class="retag-total">${fmt(v)}</div></div>`).join('')
+    : '<p style="color:var(--text3);font-size:13px">Nenhum assistente configurado.</p>';
 }
 
 // =============================================
-// HISTORICO
+// HISTÓRICO (localStorage)
 // =============================================
+function loadHistorico() { try{ return JSON.parse(localStorage.getItem('lavoro_hist')||'[]'); }catch(e){return [];} }
+function saveHistorico(mes, data) {
+  const h = loadHistorico(); const idx = h.findIndex(x=>x.mes===mes);
+  if(idx>=0) h[idx]={mes,data}; else h.unshift({mes,data});
+  localStorage.setItem('lavoro_hist', JSON.stringify(h.slice(0,24)));
+}
 function renderHistorico() {
   const hist = loadHistorico();
-  const el = document.getElementById('historicoContent');
-  if (hist.length === 0) {
-    el.innerHTML = '<p style="color:var(--text3);font-size:13px">Nenhum mês calculado ainda.</p>';
-    return;
-  }
-  el.innerHTML = hist.map(h => {
-    const total = h.data.results ? h.data.results.reduce((s,r) => s+r.total, 0) : 0;
-    const agents = h.data.results ? h.data.results.filter(r=>r.total>0).map(r=>r.nome).join(', ') : '';
-    return `
-      <div class="hist-row">
-        <div>
-          <div class="hist-month">${h.mes}</div>
-          <div class="hist-agents">${agents}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="hist-total">${fmt(total)}</div>
-          <button class="btn btn-ghost btn-sm" onclick="loadHistoricoMes('${h.mes}')">Ver</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  document.getElementById('historicoContent').innerHTML = hist.length
+    ? hist.map(h=>{
+        const total = h.data.results?.reduce((s,r)=>s+r.total,0)||0;
+        const agents = h.data.results?.filter(r=>r.total>0).map(r=>r.nome).join(', ')||'';
+        return `<div class="hist-row">
+          <div><div class="hist-month">${h.mes}</div><div class="hist-agents">${agents}</div></div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="hist-total">${fmt(total)}</div>
+            <button class="btn btn-ghost btn-sm" onclick="loadHistMes('${h.mes}')">Ver</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<p style="color:var(--text3);font-size:13px">Nenhum mês calculado ainda.</p>';
 }
-
-function loadHistoricoMes(mes) {
-  const hist = loadHistorico();
-  const h = hist.find(x => x.mes === mes);
-  if (!h) return;
-  resultado = h.data;
-  document.getElementById('headerMonth').textContent = mes;
-  renderResultado();
-  renderRetaguarda();
+function loadHistMes(mes) {
+  const h = loadHistorico().find(x=>x.mes===mes); if(!h) return;
+  resultado=h.data; document.getElementById('headerMonth').textContent=mes;
+  renderResultado(); renderRetaguarda();
   document.querySelectorAll('nav button')[1].click();
 }
 
 // =============================================
-// PARAMS
+// PARAMS UI
 // =============================================
 function renderParams() {
-  // Agent params
-  const el = document.getElementById('agentParams');
-  el.innerHTML = params.agents.map((a,i) => `
+  document.getElementById('agentParams').innerHTML = params.agents.map((a,i)=>`
     <div class="agent-card-p">
       <div class="agent-name">${a.nome}</div>
-      <div class="field-row">
-        <label>Tipo</label>
+      <div class="field-row"><label>Tipo</label>
         <select onchange="params.agents[${i}].tipo=this.value">
           <option ${a.tipo==='CASA'?'selected':''}>CASA</option>
           <option ${a.tipo==='ORIGINADOR'?'selected':''}>ORIGINADOR</option>
-        </select>
-      </div>
-      <div class="field-row">
-        <label>Meta carteira</label>
-        <input type="number" value="${a.meta}" onchange="params.agents[${i}].meta=+this.value" style="width:120px">
-      </div>
-      <div class="field-row">
-        <label>% TAC</label>
-        <input type="number" value="${(a.pct_tac||0)*100}" step="0.5" onchange="params.agents[${i}].pct_tac=+this.value/100" style="width:60px"> %
-      </div>
-      <div class="field-row">
-        <label>% Assistente</label>
-        <input type="number" value="${(a.pct_assist||0)*100}" step="0.5" onchange="params.agents[${i}].pct_assist=+this.value/100" style="width:60px"> %
-      </div>
-    </div>
-  `).join('');
+        </select></div>
+      <div class="field-row"><label>Meta carteira</label>
+        <input type="number" value="${a.meta}" onchange="params.agents[${i}].meta=+this.value"></div>
+      <div class="field-row"><label>% TAC</label>
+        <input type="number" value="${(a.pct_tac||0)*100}" step="0.5" onchange="params.agents[${i}].pct_tac=+this.value/100"> %</div>
+      <div class="field-row"><label>% H (herdado)</label>
+        <input type="number" value="${(a.pct_h||1)*100}" step="1" onchange="params.agents[${i}].pct_h=+this.value/100"> %</div>
+      <div class="field-row"><label>% Assistente</label>
+        <input type="number" value="${(a.pct_assist||0)*100}" step="0.5" onchange="params.agents[${i}].pct_assist=+this.value/100"> %</div>
+    </div>`).join('');
 
-  // Tramo tables
-  const tEl = document.getElementById('tramoTables');
-  tEl.innerHTML = Object.entries(params.tramos).map(([ag, tramos]) => `
+  document.getElementById('tramoTables').innerHTML = Object.entries(params.tramos).map(([ag,tramos])=>`
     <div style="margin-bottom:20px">
       <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">${ag}</div>
       <table class="tramo-table">
         <thead><tr><th>De (R$)</th><th>Até (R$)</th><th>Bônus (R$)</th></tr></thead>
-        <tbody>
-          ${tramos.map((t,j) => `
-            <tr>
-              <td><input type="number" value="${t.de}" onchange="params.tramos['${ag}'][${j}].de=+this.value"></td>
-              <td><input type="number" value="${t.ate}" onchange="params.tramos['${ag}'][${j}].ate=+this.value"></td>
-              <td><input type="number" value="${t.bonus}" onchange="params.tramos['${ag}'][${j}].bonus=+this.value"></td>
-            </tr>
-          `).join('')}
-        </tbody>
+        <tbody>${tramos.map((t,j)=>`<tr>
+          <td><input type="number" value="${t.de}" onchange="params.tramos['${ag}'][${j}].de=+this.value"></td>
+          <td><input type="number" value="${t.ate}" onchange="params.tramos['${ag}'][${j}].ate=+this.value"></td>
+          <td><input type="number" value="${t.bonus}" onchange="params.tramos['${ag}'][${j}].bonus=+this.value"></td>
+        </tr>`).join('')}</tbody>
       </table>
-    </div>
-  `).join('');
+    </div>`).join('');
 
-  // Other params
-  document.getElementById('p_novos_pct').value = params.novos_pct || 15;
-  document.getElementById('p_novos_min').value = params.novos_min || 500;
-  document.getElementById('p_retag_meta').value = params.retag_meta || 310;
-  document.getElementById('p_retag_valor').value = params.retag_valor || 10;
-  document.getElementById('p_retag_credito').value = params.retag_credito || 31;
-  document.getElementById('p_retag_conf').value = params.retag_conf || 24;
-  document.getElementById('p_retag_tesour').value = params.retag_tesour || 10;
-  document.getElementById('p_retag_contab').value = params.retag_contab || 10;
-  document.getElementById('p_retag_casa').value = params.retag_casa || 15;
-  document.getElementById('p_retag_cp').value = params.retag_cp || 10;
+  ['novos_pct','novos_min','retag_valor','retag_credito','retag_conf','retag_tesour','retag_contab','retag_casa','retag_cp']
+    .forEach(k=>{ const el=document.getElementById('p_'+k); if(el) el.value=params[k]||0; });
 }
 
 function salvarParams() {
-  params.novos_pct = parseFloat(document.getElementById('p_novos_pct').value);
-  params.novos_min = parseFloat(document.getElementById('p_novos_min').value);
-  params.retag_meta = parseFloat(document.getElementById('p_retag_meta').value);
-  params.retag_valor = parseFloat(document.getElementById('p_retag_valor').value);
-  params.retag_credito = parseFloat(document.getElementById('p_retag_credito').value);
-  params.retag_conf = parseFloat(document.getElementById('p_retag_conf').value);
-  params.retag_tesour = parseFloat(document.getElementById('p_retag_tesour').value);
-  params.retag_contab = parseFloat(document.getElementById('p_retag_contab').value);
-  params.retag_casa = parseFloat(document.getElementById('p_retag_casa').value);
-  params.retag_cp = parseFloat(document.getElementById('p_retag_cp').value);
+  ['novos_pct','novos_min','retag_valor','retag_credito','retag_conf','retag_tesour','retag_contab','retag_casa','retag_cp']
+    .forEach(k=>{ const el=document.getElementById('p_'+k); if(el) params[k]=parseFloat(el.value); });
   localStorage.setItem('lavoro_params', JSON.stringify(params));
   alert('Parâmetros salvos!');
 }
 
-// =============================================
-// EXPORT
-// =============================================
 function exportarResultado() {
-  if (!resultado) return;
-  const rows = resultado.results.map(r => ({
-    'Gerente': r.nome, 'Tipo': r.tipo, 'Bateu Meta': r.bateuMeta ? 'SIM' : 'NÃO',
-    'Carteira R$': r.carteira, 'Deságio R$': r.desagio,
-    'Bônus Meta R$': r.bonusMeta, 'TAC R$': r.tac, 'Novos Clientes R$': r.novos,
-    'Total R$': r.total
-  }));
+  if(!resultado) return;
+  const rows = resultado.results.map(r=>({'Gerente':r.nome,'Tipo':r.tipo,'Meta':r.bateuMeta?'SIM':'NÃO',
+    'Carteira':r.carteira,'Deságio':r.desagio,'Bônus Meta':r.bonusMeta,'TAC':r.tac,'Novos':r.novos,'Total':r.total}));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Comissões');
@@ -984,13 +936,23 @@ function exportarResultado() {
 }
 
 // =============================================
+// TOKEN SETUP
+// =============================================
+function setupToken() {
+  const current = localStorage.getItem('lavoro_gh_token') || '';
+  const token = prompt('Cole seu GitHub Personal Access Token (permissão repo):\n\nEle fica salvo apenas no seu browser.', current);
+  if(token !== null) {
+    localStorage.setItem('lavoro_gh_token', token.trim());
+    location.reload();
+  }
+}
+
+// =============================================
 // INIT
 // =============================================
 loadParams();
-loadClienteDB();
-// Set current month
-const now = new Date();
-document.getElementById('refMonth').value = now.toISOString().slice(0,7);
+loadCedentesDB();
+document.getElementById('refMonth').value = new Date().toISOString().slice(0,7);
 renderHistorico();
 </script>
 </body>
