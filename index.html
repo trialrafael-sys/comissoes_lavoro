@@ -464,18 +464,6 @@ function calcDesagio(quitados){
   const byAg = {};
   const novos = []; // new cedentes not in DB
 
-  // DEBUG: show first 5 rows raw data
-  console.log('=== QUITADOS SAMPLE ===');
-  quitados.slice(0,5).forEach((r,i)=>{
-    const d=r['DATAOPERACAO'];
-    const b=r['BORDERO'];
-    const c=String(r['CEDENTE']||'').trim().toUpperCase();
-    const parsed=parseDate(d);
-    const dstr=parsed?parsed.toISOString().slice(0,10):'NULL';
-    const key=c+'|'+parseInt(b||0)+'|'+dstr;
-    console.log(`[${i}] CED=${c} BORD=${b} DOPER=${JSON.stringify(d)} type=${typeof d} isDate=${d instanceof Date} parsed=${dstr} key=${key} inHist=${key in historico}`);
-  });
-
   for(const row of quitados){
     const ag = normAg(row['AGENTE']||row['agente']);
     if(!ag||ag==='nan') continue;
@@ -497,17 +485,22 @@ function calcDesagio(quitados){
     const doperStr = doper.toISOString().slice(0,10);
     const prazo    = dateDiffDays(tvenc,doper);
 
-    // Lookup taxa from historico
-    const key   = ced+'|'+bord+'|'+doperStr;
-    let entry   = historico[key];
-    if(!entry){
+    // Lookup taxa from historico: key=CEDENTE|BORDERO, value=list of {tdesc,ag,data}
+    const hKey = ced+'|'+bord;
+    let entries = historico[hKey];
+    if(!entries){
       const cedOrig=String(row['CEDENTEORIG']||row['cedenteorig']||'').trim().toUpperCase();
-      entry=historico[cedOrig+'|'+bord+'|'+doperStr];
+      entries=historico[cedOrig+'|'+bord];
     }
-    if(!entry){
-      // New bordero — add to historico for next month
-      // (will be updated when avaliacao is processed)
-      continue;
+    if(!entries||!entries.length) continue;
+    // Pick entry with closest date to doperStr
+    let entry = entries[0];
+    if(entries.length>1){
+      let minDiff=Infinity;
+      for(const e of entries){
+        const diff=Math.abs(new Date(e.data)-new Date(doperStr));
+        if(diff<minDiff){minDiff=diff;entry=e;}
+      }
     }
 
     const taxa = entry.tdesc / 100;
@@ -613,13 +606,18 @@ async function calcular(){
         if(!tacByAg[ag]) tacByAg[ag]=0;
         tacByAg[ag] += commTaf;
 
-        // Accumulate new borderos to historico
+        // Accumulate new borderos to historico (key=CEDENTE|BORDERO, list)
         try{
           const doper=parseDate(row['DATA_OPER']||row['data_oper']);
           if(doper){
             const dstr=doper.toISOString().slice(0,10);
-            const key=ced+'|'+bord+'|'+dstr;
-            if(!historico[key]) newBorderos[key]={tdesc,ag,data:dstr};
+            const hkey=ced+'|'+bord;
+            const existing=historico[hkey]||[];
+            const alreadyHas=existing.some(e=>e.data===dstr);
+            if(!alreadyHas){
+              if(!newBorderos[hkey]) newBorderos[hkey]=[...existing];
+              newBorderos[hkey].push({tdesc,ag,data:dstr});
+            }
           }
         }catch(e){}
       }
@@ -669,8 +667,8 @@ async function calcular(){
 
       // Update historico with new borderos from avaliacao
       let newCount=0;
-      for(const[k,v] of Object.entries(newBorderos)){
-        if(!historico[k]){historico[k]=v;newCount++;}
+      for(const[k,entries] of Object.entries(newBorderos)){
+        historico[k]=entries;newCount++;
       }
       if(newCount>0) await saveHistorico(newCount,mes);
 
