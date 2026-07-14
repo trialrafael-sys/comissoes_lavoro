@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lavoro · Comissões</title>
-<!-- build:1784057036 -->
+<!-- build:1784058328 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#0f0f11;--s:#18181c;--s2:#222228;--bd:#2e2e38;--ac:#c8a96e;--ac2:#7c6b4e;--tx:#e8e4dc;--tx2:#9a9490;--tx3:#5c5854;--gn:#4caf7d;--rd:#e05c5c;--bl:#5b8ef0;--r:8px;--mo:'SF Mono','Fira Code',monospace}
@@ -452,13 +452,18 @@ async function calcular(){
       // 1. Deságio
       var r1=calcDesagio(rawData.quitados);
       var byAg=r1.byAg; novosParaRev=dedup(r1.novos);
-      // 2. TAC + acumula histórico
+      // 2. TAC + acumula histórico (filtrar pelo mês de referência)
       setSt('run','Calculando tarifas...');
       var tacByAg={}, newBords={};
+      // mes = '2026-06' → filter DATA_OPER to same year-month
+      var mesFilter=mes.slice(0,7); // 'YYYY-MM'
       for(var i=0;i<rawData.avaliacao.length;i++){
         var row=rawData.avaliacao[i];
         var ag=normAg(row['AGENTE']||row['agente']);
         if(!ag||ag==='nan') continue;
+        // Filter by month
+        var dop=parseDate(row['DATA_OPER']||row['data_oper']);
+        if(dop&&d2s(dop).slice(0,7)!==mesFilter) continue;
         var ced=String(row['CEDENTE']||'').trim().toUpperCase();
         var bord=parseInt(row['BORDERO']||0)||0;
         var tdesc=parseFloat(row['TDESC']||0)||0;
