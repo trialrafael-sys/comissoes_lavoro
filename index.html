@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lavoro · Comissões</title>
-<!-- build:1784058328 -->
+<!-- build:1784058422 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#0f0f11;--s:#18181c;--s2:#222228;--bd:#2e2e38;--ac:#c8a96e;--ac2:#7c6b4e;--tx:#e8e4dc;--tx2:#9a9490;--tx3:#5c5854;--gn:#4caf7d;--rd:#e05c5c;--bl:#5b8ef0;--r:8px;--mo:'SF Mono','Fira Code',monospace}
@@ -330,7 +330,19 @@ function handleFile(type,input){
   reader.onload=function(e){
     try{
       var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
-      var ws=wb.Sheets[wb.SheetNames[0]];
+      // Pick sheet with most rows (handles files where first sheet is empty/pivot)
+      var bestSheet=wb.SheetNames[0];
+      var bestRows=0;
+      for(var si=0;si<wb.SheetNames.length;si++){
+        var sn=wb.SheetNames[si];
+        var ref=wb.Sheets[sn]['!ref'];
+        if(ref){
+          var range=XLSX.utils.decode_range(ref);
+          var nrows=range.e.r-range.s.r;
+          if(nrows>bestRows){bestRows=nrows;bestSheet=sn;}
+        }
+      }
+      var ws=wb.Sheets[bestSheet];
       rawData[type]=XLSX.utils.sheet_to_json(ws,{defval:null});
       document.getElementById('card-'+type).classList.add('loaded');
       document.getElementById('st-'+type).textContent='✓ '+rawData[type].length+' linhas';
